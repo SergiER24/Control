@@ -10,10 +10,19 @@ portfolio.
 - `docs/`: selected submissions, reports, and presentation materials.
 - `archive/`: original laboratory models preserved for reference.
 
+## Featured Project: Active Anti-Vibration Platform
+
+The active anti-vibration platform is my strongest project from this course. It
+focuses on modeling, linearization, stability analysis, IMC controller design,
+and simulation of a platform that isolates sensitive equipment from base
+vibrations.
+
+The complete project is available in `code/anti_vibration_platform/`, including
+MATLAB scripts, Simulink models, technical documentation, and an IEEE-format
+report draft.
+
 ## Highlights
 
-- `code/anti_vibration_platform/`: modeling, linearization, simulation scripts,
-  and an IEEE-format report for the anti-vibration platform activity.
 - `code/water_level_lock/`: water-level modeling project with scripts for
   generating Simulink models.
 - `code/exercises_and_labs/`: exercises, pre-lab work, and complementary models.
