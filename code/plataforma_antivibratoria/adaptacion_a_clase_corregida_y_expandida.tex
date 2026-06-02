@@ -1,0 +1,920 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{array}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    urlcolor=blue!50!black
+}
+
+\title{Explicaci\'on Corregida y Expandida del Proyecto\\Plataforma Antivibratoria Activa}
+\author{Versi\'on para estudio y escritura del informe}
+\date{14 de abril de 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Qu\'e voy a aclarar en este documento}
+
+En este documento voy a reescribir el proyecto \textbf{desde cero y paso a paso}, con un lenguaje alineado con lo visto en el curso. La meta no es solo mostrar ecuaciones, sino dejar claro:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item qu\'e sistema estamos modelando;
+\item de d\'onde sale \textbf{cada t\'ermino} de la ecuaci\'on;
+\item qu\'e parte del modelo es ideal, qu\'e parte es realista y qu\'e parte es una simplificaci\'on;
+\item por qu\'e se necesita linealizar;
+\item qu\'e modelo se usa para dise\~nar el controlador;
+\item con qu\'e modelo se compara luego;
+\item c\'omo entra Simscape en todo esto.
+\end{itemize}
+
+La pregunta central que quieres aclarar es esta:
+
+\begin{quote}
+\textit{\`\`Entonces, \textbf{primero} planteamos un sistema m\'as o menos realista, luego lo linealizamos, y luego toca compararlo con un sistema mucho m\'as real que es el simulado en Simscape?''}
+\end{quote}
+
+La respuesta correcta es:
+
+\begin{quote}
+\textbf{Casi s\'i, pero con una correcci\'on importante:} primero se plantea el sistema f\'isico y sus ecuaciones; luego se construye un modelo realista de simulaci\'on; despu\'es se obtiene un modelo matem\'atico aproximado y linealizado para an\'alisis y dise\~no; y finalmente se compara el modelo linealizado contra el modelo realista implementado en Simulink/Simscape.
+\end{quote}
+
+Es decir, \textbf{Simscape no reemplaza la derivaci\'on matem\'atica}; Simscape es la herramienta de simulaci\'on del modelo realista.
+
+\section{Paso 0: cu\'al es la l\'ogica correcta de la actividad}
+
+Antes de escribir una sola ecuaci\'on, hay que entender el flujo correcto del trabajo. La actividad pide realmente \textbf{dos modelos diferentes del mismo sistema}:
+
+\subsection{Modelo 1: modelo realista}
+
+Es el modelo que busca parecerse m\'as a la planta real. Puede incluir:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item no linealidades;
+\item saturaci\'on;
+\item fricci\'on;
+\item topes;
+\item restricciones f\'isicas;
+\item implementaci\'on en Simulink o Simscape.
+\end{itemize}
+
+\subsection{Modelo 2: modelo matem\'atico aproximado}
+
+Es el modelo m\'as simple que sirve para:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item linealizar;
+\item obtener una funci\'on de transferencia;
+\item analizar estabilidad;
+\item dise\~nar el controlador.
+\end{itemize}
+
+\subsection{Lo que se compara al final}
+
+No se comparan dos sistemas diferentes. Se compara:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el \textbf{modelo aproximado linealizado}, que sirve para dise\~no;
+\item contra el \textbf{modelo realista}, que representa mejor la f\'isica.
+\end{itemize}
+
+Si usas Simscape, entonces Simscape es la implementaci\'on del modelo realista.
+
+\section{Paso 1: escoger el sistema f\'isico}
+
+Escogimos una \textbf{plataforma antivibratoria activa}. La interpretaci\'on f\'isica es:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item una base inferior vibra por una perturbaci\'on externa;
+\item sobre ella hay una plataforma superior donde se monta un equipo sensible;
+\item la plataforma est\'a conectada a la base mediante elementos mec\'anicos;
+\item adem\'as se aplica una fuerza activa para reducir vibraci\'on o seguir una referencia.
+\end{itemize}
+
+\subsection{Por qu\'e esta idea es buena para el curso}
+
+Porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item es SISO;
+\item puede modelarse con leyes de Newton;
+\item admite una versi\'on realista y una versi\'on linealizada;
+\item tiene perturbaciones naturales;
+\item es defendible como aplicaci\'on real;
+\item se presta bien para comparar modelos.
+\end{itemize}
+
+\section{Paso 2: definir entrada, salida y perturbaci\'on}
+
+Esto es fundamental porque ordena todo el resto.
+
+\subsection{Entrada de control}
+
+La entrada de control es:
+\[
+u(t),
+\]
+que representa la se\~nal que le damos al actuador.
+
+\subsection{Salida}
+
+La salida elegida es:
+\[
+y(t)=x(t),
+\]
+donde $x(t)$ es la posici\'on de la plataforma superior.
+
+\subsection{Perturbaci\'on}
+
+La perturbaci\'on externa es:
+\[
+z(t),
+\]
+que representa el movimiento de la base.
+
+\subsection{Por qu\'e sigue siendo SISO}
+
+Aunque existe una perturbaci\'on adicional, el sistema sigue siendo SISO desde el punto de vista del control porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la se\~nal manipulada es una sola: $u(t)$;
+\item la variable controlada es una sola: $x(t)$.
+\end{itemize}
+
+La perturbaci\'on no cambia la clasificaci\'on SISO del problema de control.
+
+\section{Paso 3: plantear el modelo f\'isico realista}
+
+Ahora viene lo m\'as importante: construir la ecuaci\'on din\'amica explicando de d\'onde sale cada cosa.
+
+\subsection{Fuerzas sobre la masa}
+
+La plataforma superior se modela como una masa $m$. Sobre esa masa act\'uan:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la fuerza del actuador $F_a$;
+\item la fuerza del resorte;
+\item la fuerza del amortiguador;
+\item una fuerza no lineal adicional de rigidez;
+\item una fuerza de fricci\'on;
+\item una fuerza de tope mec\'anico si la masa supera el recorrido permitido.
+\end{itemize}
+
+Aplicando la segunda ley de Newton:
+\begin{equation}
+\sum F = m\ddot{x}.
+\end{equation}
+
+Entonces escribimos:
+\begin{equation}
+m\ddot{x} = F_a - F_{\text{susp}} - F_{\text{stop}}.
+\label{eq:base}
+\end{equation}
+
+Esta ecuaci\'on es el punto de partida. Todo lo dem\'as es explicar qu\'e contiene $F_{\text{susp}}$ y qu\'e contiene $F_{\text{stop}}$.
+
+\section{Paso 4: de d\'onde sale cada t\'ermino mec\'anico}
+
+\subsection{El resorte lineal}
+
+El primer t\'ermino viene de la ley de Hooke:
+\[
+F = k\,\Delta x.
+\]
+
+Aqu\'i, la deformaci\'on del resorte no es $x$ sola, sino la diferencia entre la posici\'on de la plataforma y la base:
+\[
+\Delta x = x-z.
+\]
+
+Entonces:
+\begin{equation}
+F_{\text{resorte}} = k(x-z).
+\label{eq:hooke}
+\end{equation}
+
+\subsubsection{Interpretaci\'on f\'isica}
+
+Si la plataforma sube y la base no, el resorte se estira o comprime. Si la base sube junto con la plataforma exactamente lo mismo, entonces no hay deformaci\'on relativa. Por eso \textbf{no} usamos $kx$, sino $k(x-z)$.
+
+\subsection{El amortiguador viscoso}
+
+El amortiguador ideal viscoso se modela como:
+\[
+F = c\,\Delta \dot{x}.
+\]
+
+Como la velocidad relevante es la velocidad relativa entre plataforma y base:
+\[
+\Delta \dot{x} = \dot{x}-\dot{z}.
+\]
+
+Entonces:
+\begin{equation}
+F_{\text{amort}} = c(\dot{x}-\dot{z}).
+\label{eq:damper}
+\end{equation}
+
+\subsubsection{Interpretaci\'on f\'isica}
+
+El amortiguador se opone al movimiento relativo. Si plataforma y base se mueven juntas a la misma velocidad, no hay disipaci\'on viscosa relativa.
+
+\subsection{La rigidez c\'ubica}
+
+Este t\'ermino se agrega como una correcci\'on fenomenol\'ogica:
+\begin{equation}
+F_{\text{c\'ubico}} = k_3(x-z)^3.
+\label{eq:cubico}
+\end{equation}
+
+\subsubsection{De d\'onde sale realmente}
+
+No sale de una ``ley nueva'' del curso, sino de una extensi\'on del modelo de Hooke para reflejar que un elemento el\'astico real puede dejar de comportarse de forma perfectamente lineal cuando la deformaci\'on aumenta.
+
+\subsubsection{Por qu\'e s\'i es v\'alido ponerlo}
+
+Porque el enunciado te pide que el modelo realista incluya efectos que no aparezcan en el modelo aproximado. Un t\'ermino c\'ubico es una manera simple, cl\'asica y defendible de introducir no linealidad.
+
+\subsection{La fricci\'on seca}
+
+Una manera ideal de escribir fricci\'on de Coulomb es:
+\[
+F_{\text{fric}} = F_c\,\mathrm{sgn}(\dot{x}-\dot{z}).
+\]
+
+Eso significa:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item si la velocidad relativa es positiva, la fricci\'on empuja en sentido opuesto;
+\item si la velocidad relativa es negativa, tambi\'en se opone;
+\item si la velocidad relativa es muy peque\~na, el modelo ideal tiene una no diferenciabilidad en cero.
+\end{itemize}
+
+\subsubsection{Por qu\'e en simulaci\'on usamos $\tanh$}
+
+En simulaci\'on, usar la funci\'on signo puede ser problem\'atico num\'ericamente. Por eso se regulariza como:
+\begin{equation}
+F_{\text{fric}} =
+F_c\tanh\left(\frac{\dot{x}-\dot{z}}{v_\varepsilon}\right).
+\label{eq:tanh}
+\end{equation}
+
+\subsubsection{Interpretaci\'on f\'isica}
+
+La fricci\'on sigue oponi\'endose al movimiento relativo, pero ahora con una transici\'on suave cerca de velocidad relativa cero.
+
+\subsubsection{Aclaraci\'on importante}
+
+Esta regularizaci\'on con $\tanh$ es una \textbf{herramienta de simulaci\'on}. No significa necesariamente que la fricci\'on real del sistema sea exactamente hiperb\'olica; significa que estamos suavizando un efecto tipo Coulomb para poder simularlo mejor.
+
+\subsection{Los topes mec\'anicos}
+
+Los topes se agregan para impedir desplazamientos no realistas. Si la plataforma se pasa de un l\'imite:
+\[
+|x| > x_{\text{lim}},
+\]
+entonces aparece una fuerza adicional.
+
+La idea f\'isica es:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el tope act\'ua como un resorte muy duro cuando se produce contacto;
+\item adem\'as agrega algo de disipaci\'on durante ese contacto.
+\end{itemize}
+
+Por eso se modela como:
+\begin{equation}
+F_{\text{stop}}=
+\begin{cases}
+k_{\text{stop}}(x-x_{\text{lim}})+c_{\text{stop}}\max(\dot{x},0), & x>x_{\text{lim}},\\[4pt]
+k_{\text{stop}}(x+x_{\text{lim}})+c_{\text{stop}}\min(\dot{x},0), & x<-x_{\text{lim}},\\[4pt]
+0, & |x|\le x_{\text{lim}}.
+\end{cases}
+\label{eq:stops}
+\end{equation}
+
+\section{Paso 5: de d\'onde sale la ecuaci\'on del actuador}
+
+Esta parte es muy importante porque aqu\'i aparece el tercer estado.
+
+\subsection{Lo que no queremos hacer}
+
+No queremos decir simplemente:
+\[
+F_a = K_a u
+\]
+porque eso har\'ia al actuador instant\'aneo y eliminar\'ia una din\'amica importante.
+
+\subsection{Modelo f\'isico razonable del actuador}
+
+Una forma muy natural de justificar un actuador de primer orden, usando ideas vistas en cursos b\'asicos de circuitos y sistemas, es asumir que el actuador es electromec\'anico y que:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la fuerza es proporcional a una corriente interna $i(t)$;
+\item esa corriente viene de una din\'amica el\'ectrica tipo RL.
+\end{itemize}
+
+Entonces:
+\begin{equation}
+F_a = K_f i,
+\label{eq:force_current}
+\end{equation}
+y la parte el\'ectrica se modela como:
+\begin{equation}
+L\dot{i} + Ri = u.
+\label{eq:rl}
+\end{equation}
+
+\subsection{Pasar de corriente a fuerza}
+
+De \eqref{eq:force_current}:
+\[
+i = \frac{F_a}{K_f}.
+\]
+
+Entonces:
+\[
+\dot{i} = \frac{\dot{F_a}}{K_f}.
+\]
+
+Sustituyendo en \eqref{eq:rl}:
+\[
+L\frac{\dot{F_a}}{K_f} + R\frac{F_a}{K_f} = u.
+\]
+
+Multiplicando por $K_f/R$:
+\[
+\frac{L}{R}\dot{F_a} + F_a = \frac{K_f}{R}u.
+\]
+
+Definiendo:
+\[
+\tau_a = \frac{L}{R},
+\qquad
+K_a = \frac{K_f}{R},
+\]
+obtenemos:
+\begin{equation}
+\tau_a\dot{F_a} + F_a = K_a u.
+\label{eq:act_first_order}
+\end{equation}
+
+\subsection{Por qu\'e esta ecuaci\'on es buena para el curso}
+
+Porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item es f\'isicamente justificable;
+\item usa una ley de circuito simple;
+\item deja una din\'amica de primer orden muy clara;
+\item permite que la planta total sea de tercer orden.
+\end{itemize}
+
+\subsection{Por qu\'e agregamos saturaci\'on}
+
+En simulaci\'on realista no tiene sentido permitir cualquier se\~nal. Entonces usamos:
+\begin{equation}
+\tau_a\dot{F_a} + F_a = K_a\,\mathrm{sat}(u).
+\label{eq:act_sat}
+\end{equation}
+
+La saturaci\'on se deja en el modelo realista pero se omite en el modelo lineal nominal.
+
+\section{Paso 6: escribir el modelo realista completo}
+
+Uniendo todo:
+
+\begin{equation}
+m\ddot{x} = F_a - k(x-z) - c(\dot{x}-\dot{z}) - k_3(x-z)^3
+- F_c\tanh\left(\frac{\dot{x}-\dot{z}}{v_\varepsilon}\right)
+- F_{\text{stop}},
+\label{eq:real_full}
+\end{equation}
+
+\begin{equation}
+\tau_a\dot{F_a} + F_a = K_a\,\mathrm{sat}(u).
+\label{eq:real_act}
+\end{equation}
+
+Ese es el \textbf{modelo realista continuo} del sistema.
+
+\section{Paso 7: pasar a variables de estado}
+
+Ahora hacemos exactamente lo que se ve en tus diapositivas de estabilidad: representar el sistema como
+\[
+\dot{x}=f(x,u).
+\]
+
+\subsection{Estados}
+
+Definimos:
+\begin{equation}
+x_1 = x,
+\qquad
+x_2 = \dot{x},
+\qquad
+x_3 = F_a.
+\end{equation}
+
+\subsection{Ecuaciones no lineales de estado}
+
+Entonces:
+\begin{equation}
+\dot{x}_1 = x_2,
+\label{eq:state1}
+\end{equation}
+
+\begin{equation}
+\dot{x}_2 =
+\frac{1}{m}
+\left[
+x_3
+- k(x_1-z)
+- c(x_2-\dot{z})
+- k_3(x_1-z)^3
+- F_c\tanh\left(\frac{x_2-\dot{z}}{v_\varepsilon}\right)
+- F_{\text{stop}}
+\right],
+\label{eq:state2}
+\end{equation}
+
+\begin{equation}
+\dot{x}_3 =
+\frac{-x_3 + K_a\,\mathrm{sat}(u)}{\tau_a}.
+\label{eq:state3}
+\end{equation}
+
+La salida se define como:
+\begin{equation}
+y = x_1.
+\label{eq:output}
+\end{equation}
+
+Con esto ya tenemos el modelo no lineal en forma de espacio de estado.
+
+\section{Paso 8: encontrar el punto de equilibrio}
+
+Para linealizar, necesitamos un equilibrio.
+
+\subsection{Equilibrio elegido}
+
+Tomamos el reposo:
+\begin{equation}
+x^\star = 0,\qquad
+\dot{x}^\star = 0,\qquad
+F_a^\star = 0,\qquad
+u^\star = 0,\qquad
+z^\star = 0,\qquad
+\dot{z}^\star = 0.
+\end{equation}
+
+\subsection{Por qu\'e tiene sentido}
+
+Porque ese es el estado m\'as natural del sistema:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la plataforma est\'a quieta;
+\item no hay desplazamiento relativo;
+\item el actuador no est\'a empujando;
+\item la base no se mueve.
+\end{itemize}
+
+\section{Paso 9: linealizaci\'on}
+
+Aqu\'i viene una de las partes m\'as importantes.
+
+\subsection{Idea general}
+
+Como en el curso, linealizar significa aproximar el sistema no lineal cerca del equilibrio por uno de la forma:
+\begin{equation}
+\dot{\hat{x}} = A\hat{x}+B\hat{u},
+\qquad
+\hat{y}=C\hat{x}+D\hat{u}.
+\end{equation}
+
+\subsection{Qu\'e pasa con cada t\'ermino al linealizar}
+
+Esto hay que decirlo con mucho cuidado.
+
+\subsubsection{Resorte lineal}
+
+El t\'ermino
+\[
+k(x-z)
+\]
+ya es lineal, as\'i que se conserva.
+
+\subsubsection{Amortiguador viscoso}
+
+El t\'ermino
+\[
+c(\dot{x}-\dot{z})
+\]
+ya es lineal, as\'i que se conserva.
+
+\subsubsection{Rigidez c\'ubica}
+
+El t\'ermino
+\[
+k_3(x-z)^3
+\]
+tiene derivada nula en el equilibrio $x-z=0$, por lo que desaparece en la linealizaci\'on de primer orden.
+
+\subsubsection{Fricci\'on tipo Coulomb regularizada}
+
+Aqu\'i hay un detalle importante que debemos aclarar bien.
+
+La fricci\'on seca ideal no es diferenciable en cero. En simulaci\'on la regularizamos con $\tanh$, pero esa regularizaci\'on es principalmente una herramienta num\'erica. Por esa raz\'on, para el \textbf{modelo nominal de dise\~no} decidimos \textbf{no incluir la fricci\'on seca en el modelo linealizado} y tratarla como un efecto no modelado del sistema realista.
+
+Eso es coherente con el objetivo del curso: el modelo de dise\~no debe ser suficientemente simple y el modelo realista debe capturar efectos adicionales.
+
+\subsubsection{Topes mec\'anicos}
+
+Los topes no act\'uan cerca del equilibrio porque mientras
+\[
+|x|<x_{\text{lim}},
+\]
+su fuerza es cero. Entonces tampoco aparecen en la linealizaci\'on alrededor del origen.
+
+\subsubsection{Saturaci\'on}
+
+La saturaci\'on se elimina en el modelo nominal porque es una no linealidad del actuador y el dise\~no del controlador se hace sobre una versi\'on lineal aproximada.
+
+\section{Paso 10: modelo lineal resultante}
+
+Despu\'es de linealizar, queda:
+\begin{equation}
+m\ddot{x} + c\dot{x} + kx = F_a + kz + c\dot{z},
+\label{eq:linear_with_dist}
+\end{equation}
+\begin{equation}
+\tau_a\dot{F_a} + F_a = K_a u.
+\label{eq:linear_act}
+\end{equation}
+
+\subsection{Interpretaci\'on}
+
+La perturbaci\'on de base entra como:
+\[
+kz + c\dot{z},
+\]
+porque la base excita tanto el resorte como el amortiguador.
+
+\subsection{Planta para dise\~no}
+
+Para obtener la planta desde la entrada de control hasta la salida, fijamos la perturbaci\'on en cero:
+\[
+z=0,\qquad \dot{z}=0.
+\]
+
+Entonces:
+\begin{equation}
+m\ddot{x}+c\dot{x}+kx = F_a,
+\label{eq:plant_mech}
+\end{equation}
+\begin{equation}
+\tau_a\dot{F_a}+F_a = K_a u.
+\label{eq:plant_act}
+\end{equation}
+
+\section{Paso 11: espacio de estado lineal}
+
+Con los estados:
+\[
+\hat{x}=
+\begin{bmatrix}
+\hat{x}_1\\
+\hat{x}_2\\
+\hat{x}_3
+\end{bmatrix}
+=
+\begin{bmatrix}
+\hat{x}\\
+\widehat{\dot{x}}\\
+\widehat{F_a}
+\end{bmatrix},
+\]
+el modelo lineal queda:
+
+\begin{equation}
+\dot{\hat{x}}=
+\underbrace{
+\begin{bmatrix}
+0 & 1 & 0\\
+-\dfrac{k}{m} & -\dfrac{c}{m} & \dfrac{1}{m}\\
+0 & 0 & -\dfrac{1}{\tau_a}
+\end{bmatrix}
+}_{A}
+\hat{x}
++
+\underbrace{
+\begin{bmatrix}
+0\\
+0\\
+\dfrac{K_a}{\tau_a}
+\end{bmatrix}
+}_{B_u}
+\hat{u}
++
+\underbrace{
+\begin{bmatrix}
+0 & 0\\
+\dfrac{k}{m} & \dfrac{c}{m}\\
+0 & 0
+\end{bmatrix}
+}_{B_d}
+\begin{bmatrix}
+\hat{z}\\
+\widehat{\dot{z}}
+\end{bmatrix}.
+\label{eq:ss_linear}
+\end{equation}
+
+La salida es:
+\begin{equation}
+\hat{y}=
+\underbrace{
+\begin{bmatrix}
+1 & 0 & 0
+\end{bmatrix}
+}_{C}
+\hat{x}.
+\end{equation}
+
+\section{Paso 12: funci\'on de transferencia}
+
+Como en el curso, para el caso SISO la funci\'on de transferencia puede obtenerse con:
+\[
+G(s)=C(sI-A)^{-1}B + D.
+\]
+
+Pero aqu\'i tambi\'en se puede obtener directamente desde las ecuaciones.
+
+Aplicando Laplace a \eqref{eq:plant_mech} y \eqref{eq:plant_act}:
+\[
+(ms^2+cs+k)X(s)=F_a(s),
+\]
+\[
+(\tau_as+1)F_a(s)=K_aU(s).
+\]
+
+Eliminando $F_a(s)$:
+\begin{equation}
+G(s)=\frac{X(s)}{U(s)}
+=
+\frac{K_a}{(\tau_as+1)(ms^2+cs+k)}.
+\label{eq:tf_final}
+\end{equation}
+
+\section{Paso 13: verificar el orden del sistema}
+
+El denominador de \eqref{eq:tf_final} tiene grado tres. Por tanto la planta aproximada es de \textbf{tercer orden}.
+
+Esto se interpreta f\'isicamente como:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item dos estados de la din\'amica mec\'anica: posici\'on y velocidad;
+\item un estado adicional del actuador.
+\end{itemize}
+
+\section{Paso 14: an\'alisis de estabilidad}
+
+Con los valores num\'ericos:
+\[
+m=12,\quad c=95,\quad k=1800,\quad \tau_a=0.04,\quad K_a=220,
+\]
+el denominador queda:
+\begin{equation}
+D(s)=0.48s^3 + 15.8s^2 + 167s + 1800.
+\end{equation}
+
+\subsection{Por polos}
+
+Los polos son aproximadamente:
+\[
+s_1=-25,\qquad
+s_{2,3}=-3.958 \pm j11.590.
+\]
+
+Todos tienen parte real negativa, as\'i que la planta aproximada es estable.
+
+\subsection{Por Routh-Hurwitz}
+
+Para un polinomio c\'ubico:
+\[
+a_3s^3+a_2s^2+a_1s+a_0,
+\]
+la estabilidad requiere:
+\[
+a_3>0,\quad a_2>0,\quad a_1>0,\quad a_0>0,\quad a_2a_1>a_3a_0.
+\]
+
+Aqu\'i:
+\[
+a_3=0.48,\quad a_2=15.8,\quad a_1=167,\quad a_0=1800.
+\]
+
+Todos son positivos y:
+\[
+a_2a_1 = 15.8\cdot167 = 2638.6,
+\qquad
+a_3a_0 = 0.48\cdot1800 = 864.
+\]
+
+Como:
+\[
+2638.6 > 864,
+\]
+entonces la planta es estable por RH.
+
+\section{Paso 15: respuesta temporal}
+
+Una vez obtenida la planta, el curso sugiere estudiar:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item tiempo de subida;
+\item tiempo pico;
+\item tiempo de establecimiento;
+\item sobrepico;
+\item error estacionario.
+\end{itemize}
+
+Esto permite caracterizar la planta antes de cerrar el lazo.
+
+\section{Paso 16: dise\~no del controlador con IMC}
+
+Como en tus clases aparece el tema de IMC y PID, escogimos \textbf{IMC} porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item est\'a permitido por el enunciado;
+\item encaja bien con la estructura de la planta;
+\item deja una matem\'atica clara y ordenada;
+\item permite justificar directamente la din\'amica deseada en lazo cerrado.
+\end{itemize}
+
+\subsection{Planta nominal}
+
+Tomamos:
+\[
+\tilde{G}_p(s)=\frac{K_a}{(\tau_as+1)(ms^2+cs+k)}.
+\]
+
+\subsection{Filtro}
+
+Escogemos:
+\begin{equation}
+F(s)=\frac{1}{(\lambda s+1)^3}.
+\end{equation}
+
+\subsection{Por qu\'e filtro de orden 3}
+
+Porque la inversa de la planta tiene tres factores din\'amicos. Si no agregamos un filtro suficiente, el controlador no ser\'ia realizable.
+
+\subsection{Controlador interno}
+
+\[
+Q(s)=\tilde{G}_p^{-1}(s)F(s)
+=
+\frac{(\tau_as+1)(ms^2+cs+k)}{K_a(\lambda s+1)^3}.
+\]
+
+\subsection{Controlador equivalente}
+
+\begin{equation}
+G_c(s)=\frac{Q(s)}{1-\tilde{G}_p(s)Q(s)}
+=
+\frac{(\tau_as+1)(ms^2+cs+k)}
+{K_a\lambda s(\lambda^2s^2+3\lambda s+3)}.
+\end{equation}
+
+\subsection{Qu\'e significa esto}
+
+Que el controlador se dise\~na usando la planta aproximada, no la realista.
+
+Eso es exactamente lo correcto para la actividad:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el modelo lineal sirve para dise\~no;
+\item el modelo realista sirve para validaci\'on.
+\end{itemize}
+
+\section{Paso 17: entonces, \textbf{qu\'e se compara con qu\'e}?}
+
+Esta es la parte que quer\'ias dejar completamente clara.
+
+\subsection{Primero}
+
+Se plantea un \textbf{modelo f\'isico realista} con ecuaciones no lineales.
+
+\subsection{Segundo}
+
+Se obtiene un \textbf{modelo linealizado y simplificado} alrededor del equilibrio.
+
+\subsection{Tercero}
+
+Con ese modelo linealizado se hace:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item funci\'on de transferencia;
+\item estabilidad;
+\item an\'alisis temporal;
+\item dise\~no del controlador.
+\end{itemize}
+
+\subsection{Cuarto}
+
+Se implementa el \textbf{modelo realista} en Simulink o Simscape.
+
+\subsection{Quinto}
+
+Se compara el desempe\~no del controlador sobre:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el modelo aproximado lineal;
+\item el modelo realista simulado.
+\end{itemize}
+
+\subsection{Respuesta corta a tu duda}
+
+S\'i:
+
+\begin{quote}
+\textbf{Planteamos un sistema realista, luego lo linealizamos para obtener el modelo nominal, y luego comparamos ese modelo nominal con el modelo realista implementado en simulaci\'on.}
+\end{quote}
+
+La \'unica precisi\'on es que Simscape no ``te da'' la ecuaci\'on de tercer orden. La ecuaci\'on de tercer orden la debes derivar t\'u desde el modelo f\'isico simplificado.
+
+\section{Paso 18: qu\'e queda como modelo realista y qu\'e queda como modelo nominal}
+
+\subsection{Modelo realista}
+
+Debe incluir:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item resorte lineal;
+\item amortiguador lineal;
+\item rigidez c\'ubica;
+\item fricci\'on seca regularizada;
+\item saturaci\'on del actuador;
+\item topes mec\'anicos;
+\item perturbaci\'on de base.
+\end{itemize}
+
+\subsection{Modelo nominal linealizado}
+
+Debe incluir:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item resorte lineal;
+\item amortiguador lineal;
+\item din\'amica del actuador de primer orden.
+\end{itemize}
+
+Y debe excluir, para el dise\~no:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item saturaci\'on;
+\item topes;
+\item rigidez c\'ubica;
+\item fricci\'on seca.
+\end{itemize}
+
+\section{Resumen final}
+
+El flujo correcto del proyecto es:
+
+\begin{enumerate}[leftmargin=1.2cm]
+\item escoger un sistema f\'isico realista;
+\item derivar sus ecuaciones usando leyes f\'isicas;
+\item escribir el modelo no lineal en espacio de estado;
+\item escoger un punto de equilibrio;
+\item linealizar el sistema;
+\item obtener la funci\'on de transferencia aproximada;
+\item analizar estabilidad;
+\item dise\~nar el controlador con el modelo linealizado;
+\item implementar el modelo realista en Simulink/Simscape;
+\item comparar ambos modelos en lazo abierto y en lazo cerrado.
+\end{enumerate}
+
+Eso es exactamente lo que se espera seg\'un el curso y seg\'un el enunciado.
+
+\end{document}

@@ -1,0 +1,693 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{siunitx}
+\usepackage{mathtools}
+\usepackage{float}
+
+\geometry{margin=2.4cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    urlcolor=blue!50!black,
+    citecolor=blue!50!black
+}
+
+\title{Explicaci\'on Super Detallada\\Proyecto de Plataforma Antivibratoria Activa}
+\author{Grupo: completar nombres}
+\date{Abril 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Objetivo de este documento}
+
+Este documento no est\'a escrito como un informe corto de entrega, sino como una explicaci\'on extensa del proyecto para que el grupo pueda entender con claridad:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item qu\'e sistema se est\'a modelando;
+\item por qu\'e este sistema s\'i cumple lo pedido en la Actividad 2;
+\item c\'omo se construye el modelo realista;
+\item c\'omo se obtiene el modelo matem\'atico aproximado;
+\item por qu\'e ese modelo es de tercer orden;
+\item c\'omo se dise\~na el controlador;
+\item c\'omo se plantean las simulaciones;
+\item qu\'e significan las m\'etricas obtenidas;
+\item qu\'e parte est\'a implementada en MATLAB/Simulink y qu\'e parte requiere cierre final en Simscape.
+\end{itemize}
+
+La idea es que este texto sea suficientemente detallado para servir como material de estudio antes de la sustentaci\'on, y tambi\'en como base para escribir el informe final en formato IEEE.
+
+\section{Descripci\'on general del proyecto}
+
+El proyecto consiste en modelar y controlar una \textbf{plataforma antivibratoria activa}. La aplicaci\'on f\'isica que se tiene en mente es la siguiente: existe una base inferior que vibra por efecto de una perturbaci\'on externa, y sobre esa base hay una plataforma superior que soporta un equipo sensible. El objetivo del sistema de control es hacer que la plataforma superior se mueva lo menos posible a pesar de las vibraciones de la base, y adicionalmente permitir que la plataforma siga una referencia de posici\'on cuando sea necesario.
+
+Desde el punto de vista del curso, esta idea es adecuada por varias razones:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item representa una aplicaci\'on realista de aislamiento vibratorio;
+\item permite plantear un modelo f\'isico con componentes mec\'anicos claros;
+\item admite no linealidades y restricciones f\'isicas en el modelo realista;
+\item se puede simplificar a un modelo lineal adecuado para dise\~nar el controlador;
+\item el sistema es SISO;
+\item el sistema tiene orden m\'inimo tres si se incluye la din\'amica del actuador.
+\end{itemize}
+
+\section{Por qu\'e este proyecto s\'i cumple el enunciado}
+
+La actividad exige un sistema:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item SISO;
+\item de al menos tercer orden;
+\item con modelo realista en Simulink o Simscape;
+\item con modelo matem\'atico aproximado derivado desde principios f\'isicos;
+\item con an\'alisis de estabilidad;
+\item con controlador dise\~nado usando el modelo aproximado;
+\item con comparaci\'on entre modelo realista y aproximado, tanto en lazo abierto como en lazo cerrado.
+\end{itemize}
+
+\subsection{Condici\'on SISO}
+
+El sistema es \textbf{SISO} porque elegimos una sola entrada y una sola salida:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item Entrada de control: la se\~nal aplicada al actuador, denotada por $u(t)$.
+\item Salida del sistema: la posici\'on vertical de la plataforma, denotada por $x(t)$.
+\end{itemize}
+
+La perturbaci\'on de base $z(t)$ no se considera la entrada de control. Es una perturbaci\'on externa, lo cual es completamente consistente con lo que pide el curso cuando habla de rechazo a perturbaciones.
+
+\subsection{Condici\'on de tercer orden}
+
+El orden m\'inimo del sistema se obtiene de la siguiente forma:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item La parte mec\'anica de la plataforma aporta dos estados: posici\'on y velocidad.
+\item El actuador no se modela como un elemento instant\'aneo, sino con una din\'amica de primer orden, lo que agrega un tercer estado.
+\end{itemize}
+
+Por tanto,
+\[
+\text{orden total} = 2 + 1 = 3.
+\]
+
+Esto es importante porque evita caer en un sistema demasiado simple como un masa-resorte-amortiguador puramente de segundo orden.
+
+\section{Descripci\'on f\'isica del sistema}
+
+Se considera una plataforma con masa $m$ conectada a una base vibrante mediante una suspensi\'on. La suspensi\'on incluye:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item un resorte lineal de rigidez $k$;
+\item un amortiguador viscoso de coeficiente $c$;
+\item una no linealidad de rigidez c\'ubica con coeficiente $k_3$;
+\item una fuerza de fricci\'on seca suavizada con magnitud $F_c$;
+\item topes mec\'anicos que limitan el desplazamiento m\'aximo admisible.
+\end{itemize}
+
+Adem\'as, la plataforma recibe una fuerza de actuaci\'on $F_a(t)$ generada por un actuador controlado por la se\~nal $u(t)$.
+
+\subsection{Variables del problema}
+
+Las variables principales del proyecto son:
+
+\begin{center}
+\begin{tabular}{>{\raggedright\arraybackslash}p{3cm} p{10.2cm}}
+\toprule
+Variable & Significado \\
+\midrule
+$x(t)$ & Posici\'on absoluta de la plataforma superior. \\
+$\dot{x}(t)$ & Velocidad de la plataforma. \\
+$\ddot{x}(t)$ & Aceleraci\'on de la plataforma. \\
+$z(t)$ & Desplazamiento de la base vibrante. \\
+$\dot{z}(t)$ & Velocidad de la base vibrante. \\
+$u(t)$ & Se\~nal de control aplicada al actuador. \\
+$F_a(t)$ & Fuerza generada por el actuador. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Par\'ametros usados}
+
+Los valores nominales adoptados en los scripts del proyecto fueron:
+
+\begin{center}
+\begin{tabular}{ccc}
+\toprule
+Par\'ametro & Valor & Unidades \\
+\midrule
+$m$ & $12$ & kg \\
+$k$ & $1800$ & N/m \\
+$c$ & $95$ & N s/m \\
+$k_3$ & $6\times10^4$ & N/m$^3$ \\
+$F_c$ & $1$ & N \\
+$K_a$ & $220$ & N/V \\
+$\tau_a$ & $0.04$ & s \\
+$u_{\text{sat}}$ & $1.5$ & V \\
+$x_{\text{lim}}$ & $0.015$ & m \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Modelo realista: qu\'e se asume y por qu\'e}
+
+La idea del modelo realista es incorporar efectos f\'isicos que hagan al sistema m\'as cercano a una planta real, y que no aparezcan necesariamente en el modelo lineal de dise\~no. Esto es precisamente lo que quiere evaluar la actividad.
+
+\subsection{Primera ley f\'isica utilizada}
+
+La ecuaci\'on base del movimiento se obtiene usando la segunda ley de Newton:
+\[
+\sum F = m\ddot{x}.
+\]
+
+Todas las fuerzas que act\'uan sobre la plataforma deben sumarse y esa suma debe ser igual a masa por aceleraci\'on.
+
+\subsection{Por qu\'e se usa movimiento relativo}
+
+Como la base tambi\'en se mueve, la suspensi\'on no depende de $x$ por s\'i sola, sino del movimiento relativo entre la plataforma y la base. Esto es f\'isicamente correcto porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el resorte se deforma por la diferencia de posiciones;
+\item el amortiguador disipa seg\'un la diferencia de velocidades;
+\item si la base y la plataforma se mueven exactamente igual, la suspensi\'on no experimenta deformaci\'on relativa.
+\end{itemize}
+
+Por tanto, los t\'erminos de la suspensi\'on dependen de:
+\[
+x-z, \qquad \dot{x}-\dot{z}.
+\]
+
+\subsection{Fuerza de suspensi\'on}
+
+La fuerza total de la suspensi\'on en el modelo realista se toma como:
+\begin{equation}
+F_{\text{susp}} =
+k(x-z)
+c(\dot{x}-\dot{z})
+k_3(x-z)^3
+F_c\tanh\left(\frac{\dot{x}-\dot{z}}{v_\varepsilon}\right).
+\label{eq:fsusp}
+\end{equation}
+
+Ahora se explica por qu\'e aparece cada t\'ermino.
+
+\subsubsection{T\'ermino lineal del resorte}
+
+El t\'ermino
+\[
+k(x-z)
+\]
+representa la fuerza restauradora lineal del resorte. Se asume comportamiento lineal cerca del rango principal de operaci\'on.
+
+\subsubsection{T\'ermino viscoso del amortiguador}
+
+El t\'ermino
+\[
+c(\dot{x}-\dot{z})
+\]
+representa disipaci\'on de energ\'ia proporcional a la velocidad relativa. Es una aproximaci\'on cl\'asica y muy usada en vibraciones mec\'anicas.
+
+\subsubsection{Rigidez c\'ubica}
+
+El t\'ermino
+\[
+k_3(x-z)^3
+\]
+se usa para introducir no linealidad en la rigidez. Esto significa que, cuando la deformaci\'on relativa es grande, la respuesta del elemento el\'astico no es puramente proporcional a la deformaci\'on. Esta es una forma simple y defendible de enriquecer el modelo realista.
+
+\subsubsection{Fricci\'on seca suavizada}
+
+El t\'ermino
+\[
+F_c\tanh\left(\frac{\dot{x}-\dot{z}}{v_\varepsilon}\right)
+\]
+modela fricci\'on de tipo Coulomb. En lugar de usar la funci\'on signo ideal, se usa una funci\'on $\tanh$ porque es num\'ericamente m\'as suave y se comporta mejor en simulaci\'on.
+
+\subsection{Topes mec\'anicos}
+
+En una plataforma real no es razonable permitir desplazamientos arbitrariamente grandes. Por eso se introducen topes mec\'anicos bilaterales. Cuando la plataforma supera un desplazamiento m\'aximo $x_{\text{lim}}$, aparece una fuerza adicional que la empuja de vuelta.
+
+Se modela como
+\begin{equation}
+F_{\text{stop}}=
+\begin{cases}
+k_{\text{stop}}(x-x_{\text{lim}}) + c_{\text{stop}}\max(\dot{x},0), & x>x_{\text{lim}}\\
+k_{\text{stop}}(x+x_{\text{lim}}) + c_{\text{stop}}\min(\dot{x},0), & x<-x_{\text{lim}}\\
+0, & |x|\le x_{\text{lim}}.
+\end{cases}
+\label{eq:fstop}
+\end{equation}
+
+\subsection{Din\'amica del actuador}
+
+No se asume un actuador instant\'aneo porque eso har\'ia el sistema demasiado ideal. Se modela como:
+\begin{equation}
+\tau_a \dot{F}_a + F_a = K_a\,\text{sat}(u),
+\label{eq:act}
+\end{equation}
+donde:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item $K_a$ es la ganancia del actuador;
+\item $\tau_a$ es la constante de tiempo del actuador;
+\item $\text{sat}(u)$ representa saturaci\'on del actuador.
+\end{itemize}
+
+La saturaci\'on se incluy\'o porque en una planta real no tiene sentido permitir esfuerzos de control infinitos.
+
+\subsection{Ecuaci\'on total del modelo realista}
+
+Con todo lo anterior, la ecuaci\'on completa del modelo realista es:
+\begin{equation}
+m\ddot{x} = F_a - F_{\text{susp}} - F_{\text{stop}},
+\label{eq:realista}
+\end{equation}
+con $F_{\text{susp}}$ dado por \eqref{eq:fsusp} y $F_{\text{stop}}$ dado por \eqref{eq:fstop}.
+
+\section{Modelo matem\'atico aproximado}
+
+El modelo aproximado se usa para el an\'alisis y para dise\~nar el controlador. En esta etapa es normal simplificar la planta. La pregunta importante no es si el modelo aproximado es perfecto, sino si es suficientemente bueno para dise\~nar un controlador razonable.
+
+\subsection{Qu\'e se desprecia y por qu\'e}
+
+Para construir el modelo aproximado se desprecia:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la rigidez c\'ubica;
+\item la fricci\'on seca suavizada;
+\item los topes mec\'anicos;
+\item la saturaci\'on del actuador, durante el dise\~no nominal.
+\end{itemize}
+
+Esto se hace porque esos elementos complican el an\'alisis y no son necesarios para obtener una primera ley de comportamiento del sistema.
+
+\subsection{Punto de operaci\'on}
+
+Se linealiza alrededor del equilibrio:
+\[
+x^\star = 0,\quad \dot{x}^\star=0,\quad z^\star=0,\quad \dot{z}^\star=0,\quad F_a^\star=0,\quad u^\star=0.
+\]
+
+La elecci\'on tiene sentido porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item es el estado natural de reposo del sistema;
+\item es consistente con la idea de estudiar perturbaciones peque\~nas alrededor de una posici\'on nominal;
+\item simplifica la expresi\'on del modelo lineal.
+\end{itemize}
+
+\subsection{Ecuaciones linealizadas}
+
+Si primero fijamos la base en reposo para analizar la planta respecto a la entrada de control, se obtiene:
+\begin{equation}
+m\ddot{x} + c\dot{x} + kx = F_a,
+\label{eq:lin1}
+\end{equation}
+y la ecuaci\'on del actuador permanece:
+\begin{equation}
+\tau_a\dot{F}_a + F_a = K_a u.
+\label{eq:lin2}
+\end{equation}
+
+\subsection{Obtenci\'on de la funci\'on de transferencia}
+
+Aplicando transformada de Laplace a \eqref{eq:lin1} y \eqref{eq:lin2}, con condiciones iniciales nulas:
+\[
+(ms^2 + cs + k)X(s) = F_a(s),
+\]
+\[
+(\tau_a s + 1)F_a(s) = K_aU(s).
+\]
+
+Eliminando $F_a(s)$:
+\begin{equation}
+G(s)=\frac{X(s)}{U(s)}
+=
+\frac{K_a}{(\tau_a s + 1)(ms^2 + cs + k)}.
+\label{eq:G}
+\end{equation}
+
+\subsection{Por qu\'e este modelo es de tercer orden}
+
+El denominador de \eqref{eq:G} es el producto de un polinomio de primer orden y uno de segundo orden. Por tanto:
+\[
+\deg(\text{denominador}) = 1 + 2 = 3.
+\]
+
+Esto confirma formalmente que el modelo aproximado es de tercer orden.
+
+\section{An\'alisis de estabilidad del modelo aproximado}
+
+Con los par\'ametros elegidos, el denominador de la planta queda:
+\[
+(\tau_as+1)(ms^2+cs+k)
+
+= 0.48s^3 + 15.8s^2 + 167s + 1800.
+\]
+
+Los polos obtenidos en la soluci\'on base son aproximadamente:
+\[
+s_1 = -25,\qquad
+s_{2,3} = -3.958 \pm j\,11.590.
+\]
+
+Como todos los polos tienen parte real negativa, la planta aproximada es \textbf{estable en lazo abierto}.
+
+\subsection{Interpretaci\'on de los polos}
+
+\begin{itemize}[leftmargin=1.2cm]
+\item El polo real r\'apido est\'a asociado al actuador.
+\item El par complejo conjugado est\'a asociado a la din\'amica masa-resorte-amortiguador.
+\end{itemize}
+
+Esto es consistente con la intuici\'on f\'isica del sistema.
+
+\section{Por qu\'e se comparan dos modelos}
+
+La comparaci\'on entre el modelo realista y el aproximado es uno de los objetivos centrales de la actividad. El mensaje que se quiere mostrar es:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el modelo aproximado sirve para dise\~nar el controlador;
+\item el modelo realista sirve para evaluar hasta qu\'e punto ese controlador sigue funcionando bien cuando aparecen efectos no ideales.
+\end{itemize}
+
+\subsection{Comparaci\'on en lazo abierto}
+
+En lazo abierto se aplica el mismo escal\'on a ambos modelos y se observan diferencias en:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item valor final;
+\item sobrepico;
+\item rapidez de respuesta;
+\item efectos de no linealidad.
+\end{itemize}
+
+La comparaci\'on en lazo abierto es importante porque muestra la validez y las limitaciones de la aproximaci\'on lineal.
+
+\section{Dise\~no del controlador por IMC}
+
+Se eligi\'o \textbf{Control por Modelo Interno (IMC)} por varias razones:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item est\'a dentro del contenido del curso;
+\item la planta aproximada es invertible en el sentido requerido;
+\item permite obtener una forma cerrada limpia del controlador;
+\item facilita justificar el papel del par\'ametro de dise\~no $\lambda$.
+\end{itemize}
+
+\subsection{Planta nominal}
+
+Se toma como planta nominal:
+\[
+\tilde{G}_p(s)=\frac{K_a}{(\tau_as+1)(ms^2+cs+k)}.
+\]
+
+\subsection{Filtro IMC}
+
+Se escoge:
+\begin{equation}
+F(s)=\frac{1}{(\lambda s+1)^3}.
+\label{eq:filtro}
+\end{equation}
+
+La potencia tres se elige para asegurar que el controlador resultante sea propio, ya que la inversa de la planta aporta tres derivadas efectivas.
+
+\subsection{Controlador interno}
+
+El controlador interno IMC es:
+\begin{equation}
+Q(s)=\tilde{G}_p^{-1}(s)F(s)
+=
+\frac{(\tau_as+1)(ms^2+cs+k)}{K_a(\lambda s+1)^3}.
+\label{eq:q}
+\end{equation}
+
+\subsection{Controlador equivalente en realimentaci\'on}
+
+La forma equivalente cl\'asica es:
+\begin{equation}
+G_c(s)=\frac{Q(s)}{1-\tilde{G}_p(s)Q(s)}.
+\label{eq:gcdef}
+\end{equation}
+
+Como
+\[
+\tilde{G}_p(s)Q(s)=\frac{1}{(\lambda s+1)^3},
+\]
+entonces:
+\[
+1-\tilde{G}_p(s)Q(s)=1-\frac{1}{(\lambda s+1)^3}
+=\frac{(\lambda s+1)^3-1}{(\lambda s+1)^3}.
+\]
+
+Luego, al simplificar, se obtiene:
+\begin{equation}
+G_c(s)=
+\frac{(\tau_as+1)(ms^2+cs+k)}
+{K_a\lambda s(\lambda^2s^2+3\lambda s+3)}.
+\label{eq:gc}
+\end{equation}
+
+\subsection{Interpretaci\'on del par\'ametro $\lambda$}
+
+El par\'ametro $\lambda$ regula la rapidez del sistema nominal en lazo cerrado:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item $\lambda$ peque\~no: respuesta m\'as r\'apida, controlador m\'as agresivo;
+\item $\lambda$ grande: respuesta m\'as lenta, mayor suavidad y generalmente mejor robustez.
+\end{itemize}
+
+En la implementaci\'on base del proyecto se us\'o:
+\[
+\lambda = 0.10\ \text{s}.
+\]
+
+\subsection{Transferencia nominal en lazo cerrado}
+
+Una de las ventajas de IMC es que la planta nominal en lazo cerrado queda:
+\begin{equation}
+T(s)=\frac{1}{(\lambda s+1)^3}.
+\label{eq:tnom}
+\end{equation}
+
+Esto significa que, en el modelo aproximado ideal, el lazo cerrado queda completamente gobernado por el filtro escogido.
+
+\section{Se\~nales de prueba}
+
+Para cumplir con la actividad no basta con una referencia constante. Se definieron pruebas que permitan evaluar tanto seguimiento como perturbaciones.
+
+\subsection{Referencia}
+
+La referencia se defini\'o por tramos:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item $r(t)=0$ para $t<1$ s;
+\item $r(t)=0.004$ m para $1\le t<9$ s;
+\item $r(t)=-0.0025$ m para $9\le t<16$ s;
+\item $r(t)=0.003$ m para $t\ge16$ s.
+\end{itemize}
+
+La raz\'on de usar varios escalones es obligar al controlador a reaccionar ante cambios sucesivos de consigna.
+
+\subsection{Perturbaci\'on de base}
+
+La base vibratoria tambi\'en se defini\'o por tramos:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item sin perturbaci\'on al inicio;
+\item una vibraci\'on senoidal principal entre 6 s y 14 s;
+\item una mezcla de dos senoidales despu\'es de 14 s.
+\end{itemize}
+
+Esto es comparable al papel que cumple la carretera en el ejemplo del veh\'iculo: una se\~nal externa que permite probar el rechazo a perturbaciones.
+
+\section{Qu\'e hace cada archivo del proyecto}
+
+En la carpeta del proyecto quedaron varios archivos, cada uno con un papel diferente.
+
+\subsection*{\texttt{Modelado\_Plataforma\_Antivibratoria.m}}
+
+Es el guion principal del proyecto, escrito por secciones al estilo del ejemplo entregado en la actividad. Su objetivo es presentar la historia completa del modelado, an\'alisis y control.
+
+\subsection*{\texttt{parametros\_plataforma.m}}
+
+Define los par\'ametros f\'isicos, las se\~nales de simulaci\'on, la planta lineal y el controlador IMC.
+
+\subsection*{\texttt{analisis\_plataforma\_antivibratoria.m}}
+
+Es el archivo que ejecuta la parte num\'erica:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item simula lazo abierto lineal y realista;
+\item simula lazo cerrado lineal y realista;
+\item calcula m\'etricas;
+\item exporta figuras;
+\item guarda resultados en \texttt{resultados\_actividad2.mat}.
+\end{itemize}
+
+\subsection*{\texttt{generarBaseVibratoria.m}}
+
+Genera la perturbaci\'on de base. Cumple un papel an\'alogo al generador de carretera del ejemplo del veh\'iculo.
+
+\subsection*{\texttt{generar\_modelos\_simulink.m}}
+
+Construye modelos de Simulink para la planta lineal, el modelo no lineal y los lazos cerrados.
+
+\subsection*{\texttt{construir\_modelos\_estilo\_ejemplo.m}}
+
+Organiza las salidas con nombres m\'as cercanos al ejemplo del curso:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item \texttt{comparacion\_modelos.slx}
+\item \texttt{comparacion\_controladores.slx}
+\item \texttt{sistema\_real.slx}
+\end{itemize}
+
+\subsection*{\texttt{guia\_armado\_simscape.md}}
+
+Explica c\'omo llevar el modelo f\'isico a una versi\'on m\'as cercana a Simscape.
+
+\subsection*{\texttt{explicacion\_super\_detallada.md}}
+
+Es una versi\'on pedag\'ogica del proyecto pensada para estudio y sustentaci\'on.
+
+\section{Implementaci\'on en Simulink y relaci\'on con Simscape}
+
+El proyecto ya tiene una versi\'on implementada con bloques de Simulink y funciones auxiliares. Esa versi\'on ya permite cumplir una parte importante del enunciado porque el PDF de la actividad indica que el modelo puede hacerse con:
+
+\begin{quote}
+bloques est\'andar o componentes de Simscape.
+\end{quote}
+
+Es decir, Simscape es recomendado, pero no estrictamente obligatorio.
+
+\subsection{Qu\'e s\'i est\'a implementado}
+
+S\'i est\'a implementado:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el modelo realista no lineal;
+\item el modelo lineal aproximado;
+\item el dise\~no del controlador IMC;
+\item las simulaciones de referencia y perturbaci\'on;
+\item las figuras y m\'etricas base.
+\end{itemize}
+
+\subsection{Qu\'e queda por cerrar si se quiere Simscape completo}
+
+Si el grupo quiere que la planta realista quede montada expl\'icitamente en Simscape, el paso adicional es construir el diagrama f\'isico con:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item \texttt{Mass};
+\item \texttt{Translational Spring};
+\item \texttt{Translational Damper};
+\item \texttt{Ideal Force Source};
+\item \texttt{Ideal Translational Motion Sensor};
+\item convertidores entre Simulink y se\~nales f\'isicas.
+\end{itemize}
+
+Ese procedimiento qued\'o descrito paso a paso en la gu\'ia de armado.
+
+\section{C\'omo interpretar las m\'etricas}
+
+\subsection{Sobrepico}
+
+El sobrepico indica qu\'e tanto se pasa la respuesta por encima del valor de referencia. Es importante porque un sistema de aislamiento vibratorio no deber\'ia ser excesivamente oscilatorio.
+
+\subsection{Tiempo de establecimiento}
+
+Mide cu\'anto tarda la salida en entrar y quedarse cerca de la referencia. Es una de las m\'etricas m\'as importantes del curso.
+
+\subsection{Error en estado estacionario}
+
+Mide la diferencia final entre la referencia y la salida. Un controlador bien dise\~nado debe minimizar este error.
+
+\subsection{Error RMS ante perturbaciones}
+
+Aunque no es una de las cuatro m\'etricas b\'asicas listadas en el enunciado, el error RMS en la ventana de perturbaci\'on es muy \'util para describir qu\'e tan bien se est\'a aislando la plataforma de la vibraci\'on de base.
+
+\section{Qu\'e responder si les preguntan por las suposiciones}
+
+Si durante la sustentaci\'on les preguntan por qu\'e se hicieron ciertas suposiciones, pueden responder as\'i:
+
+\subsection*{Por qu\'e se ignoraron algunas no linealidades en el modelo de dise\~no}
+
+Porque el modelo aproximado se usa para an\'alisis y dise\~no del controlador. Si se deja toda la complejidad del modelo realista, el dise\~no anal\'itico se vuelve innecesariamente dif\'icil para el nivel del curso.
+
+\subsection*{Por qu\'e se incluy\'o din\'amica del actuador}
+
+Porque sin ella la planta quedar\'ia de segundo orden. La actividad pide al menos tercer orden y, adem\'as, en una aplicaci\'on real el actuador no es instant\'aneo.
+
+\subsection*{Por qu\'e se us\'o fricci\'on suavizada con $\tanh$}
+
+Porque la fricci\'on tipo signo ideal genera problemas num\'ericos frecuentes. La funci\'on $\tanh$ mantiene el sentido f\'isico y mejora la simulaci\'on.
+
+\subsection*{Por qu\'e se usaron topes mec\'anicos}
+
+Porque una plataforma real tiene l\'imites f\'isicos de desplazamiento. Introducir topes vuelve el modelo m\'as cre\'ible.
+
+\subsection*{Por qu\'e se us\'o IMC}
+
+Porque est\'a alineado con el temario del curso, la planta aproximada es adecuada para IMC y el resultado es f\'acil de justificar matem\'aticamente.
+
+\section{Estado real del proyecto}
+
+Es importante ser completamente precisos con el estado actual del trabajo.
+
+\subsection{Lo que est\'a esencialmente resuelto}
+
+\begin{itemize}[leftmargin=1.2cm]
+\item elecci\'on del sistema;
+\item formulaci\'on del modelo realista;
+\item derivaci\'on del modelo aproximado;
+\item verificaci\'on del orden del sistema;
+\item an\'alisis de estabilidad;
+\item dise\~no del controlador;
+\item definici\'on de referencias y perturbaciones;
+\item base del informe;
+\item material de estudio para explicarlo.
+\end{itemize}
+
+\subsection{Lo que a\'un exige validaci\'on en MATLAB}
+
+\begin{itemize}[leftmargin=1.2cm]
+\item ejecutar y revisar visualmente los modelos \texttt{.slx};
+\item decidir si el grupo se queda con bloques est\'andar de Simulink o cierra la versi\'on equivalente en Simscape;
+\item exportar figuras finales con el formato que quieran poner en el informe.
+\end{itemize}
+
+\section{Resumen final}
+
+El proyecto de plataforma antivibratoria activa es una propuesta s\'olida para la Actividad 2 porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item tiene contexto f\'isico realista;
+\item es SISO;
+\item posee al menos tercer orden;
+\item admite modelo realista y modelo aproximado;
+\item permite dise\~nar un controlador con IMC;
+\item permite evaluar seguimiento y rechazo a perturbaciones;
+\item y deja una narrativa t\'ecnica muy clara para el informe y la sustentaci\'on.
+\end{itemize}
+
+La idea central que no deben perder de vista es esta:
+
+\begin{quote}
+Se dise\~na el controlador usando el modelo aproximado, pero se valida su desempe\~no usando el modelo realista. Esa comparaci\'on es el coraz\'on de la actividad.
+\end{quote}
+
+\end{document}

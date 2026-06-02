@@ -1,0 +1,445 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{graphicx}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    urlcolor=blue!50!black
+}
+
+\title{Plataforma Antivibratoria Activa para un Sensor de Ultrasonido\\Documento Ajustado al Enunciado}
+\author{Base para la entrega en Overleaf}
+\date{21 de abril de 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Introduccion}
+
+En el laboratorio se realizan pruebas sobre papas usando un sensor de ultrasonido. La medicion se ve afectada por vibraciones de la mesa o base donde esta montado el sensor. Si la base vibra, la posicion del sensor cambia y la distancia medida deja de reflejar unicamente la geometria real del objeto.
+
+Por esta razon, el problema se plantea como un problema de \textbf{rechazo de perturbaciones}. El objetivo del sistema de control es mantener lo mas inmovil posible la plataforma del sensor aunque la base vibre.
+
+El sistema propuesto es SISO y su planta nominal es de \textbf{tercer orden}. La variable manipulada es el voltaje aplicado al actuador, mientras que la salida de interes es la posicion de la plataforma donde esta montado el sensor.
+
+\section{1. Modelado realista del sistema}
+
+\subsection{Descripcion fisica}
+
+El sistema realista esta compuesto por:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item una base inferior sometida a vibraciones externas;
+\item una plataforma superior donde esta montado el sensor de ultrasonido;
+\item un resorte entre base y plataforma;
+\item un amortiguador viscoso entre base y plataforma;
+\item un actuador electromecanico que aplica una fuerza de correccion.
+\end{itemize}
+
+\subsection{Supuestos del modelo realista}
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la plataforma se modela como una masa concentrada;
+\item el movimiento dominante se estudia en una sola direccion;
+\item el resorte trabaja de forma lineal en el rango principal de operacion;
+\item el amortiguamiento se aproxima como viscoso lineal;
+\item el actuador se modela como un elemento electromecanico lineal;
+\item el modelo realista puede incluir saturacion del actuador y restricciones fisicas adicionales en Simulink/Simscape.
+\end{itemize}
+
+\subsection{Variables principales}
+
+\begin{center}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{9.3cm}}
+\toprule
+\textbf{Simbolo} & \textbf{Significado} \\
+\midrule
+$x(t)$ & posicion absoluta de la plataforma del sensor \\
+$z(t)$ & posicion absoluta de la base \\
+$q(t)=x(t)-z(t)$ & desplazamiento relativo entre plataforma y base \\
+$u(t)$ & voltaje aplicado al actuador \\
+$i(t)$ & corriente del actuador \\
+$F_a(t)$ & fuerza generada por el actuador \\
+$y(t)=x(t)$ & salida regulada del sistema \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Espacio para la figura del modelo realista}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_modelo_realista_simscape.png}
+\caption{Modelo realista implementado en Simulink/Simscape.}
+\label{fig:modelo_realista}
+\end{figure}
+
+\noindent\textbf{Texto sugerido:} En la Fig.~\ref{fig:modelo_realista} se muestra el modelo realista construido en Simulink/Simscape. En esta figura se deben identificar la base, la plataforma, el resorte, el amortiguador, el actuador y el punto donde se monta el sensor.
+
+\section{2. Obtencion del modelo matematico}
+
+\subsection{Modelo fisico completo}
+
+Se define la coordenada relativa:
+\begin{equation}
+q(t)=x(t)-z(t).
+\end{equation}
+
+Aplicando la segunda ley de Newton:
+\begin{equation}
+m\ddot x = -k(x-z)-c(\dot x-\dot z)+F_a.
+\end{equation}
+
+Pasando a coordenada relativa:
+\begin{equation}
+m\ddot q + c\dot q + kq = F_a - m\ddot z.
+\label{eq:mech_full}
+\end{equation}
+
+Para el actuador se usa:
+\begin{equation}
+F_a=K_f i,
+\label{eq:fa}
+\end{equation}
+\begin{equation}
+L\dot i + Ri + K_e\dot q = u.
+\label{eq:elec}
+\end{equation}
+
+Sustituyendo \eqref{eq:fa} en \eqref{eq:mech_full}:
+\begin{equation}
+m\ddot q + c\dot q + kq = K_f i - m\ddot z,
+\label{eq:full1}
+\end{equation}
+\begin{equation}
+L\dot i + Ri + K_e\dot q = u.
+\label{eq:full2}
+\end{equation}
+
+\subsection{Planta nominal para analisis y control}
+
+Para obtener la planta nominal se anula temporalmente la perturbacion:
+\[
+z(t)=0,\qquad \dot z(t)=0,\qquad \ddot z(t)=0.
+\]
+
+Entonces:
+\begin{equation}
+m\ddot q + c\dot q + kq = K_f i,
+\end{equation}
+\begin{equation}
+L\dot i + Ri + K_e\dot q = u.
+\end{equation}
+
+Se definen los estados:
+\[
+x_1=q,\qquad x_2=\dot q,\qquad x_3=i.
+\]
+
+La representacion nominal en espacio de estados queda:
+\begin{equation}
+\dot x = Ax+Bu,
+\end{equation}
+\begin{equation}
+y = Cx+Du,
+\end{equation}
+con
+\begin{equation}
+A=
+\begin{bmatrix}
+0 & 1 & 0\\
+-\dfrac{k}{m} & -\dfrac{c}{m} & \dfrac{K_f}{m}\\
+0 & -\dfrac{K_e}{L} & -\dfrac{R}{L}
+\end{bmatrix},
+\qquad
+B=
+\begin{bmatrix}
+0\\
+0\\
+\dfrac{1}{L}
+\end{bmatrix},
+\end{equation}
+\begin{equation}
+C=
+\begin{bmatrix}
+1 & 0 & 0
+\end{bmatrix},
+\qquad
+D=0.
+\end{equation}
+
+La funcion de transferencia nominal se obtiene con:
+\begin{equation}
+G(s)=C(sI-A)^{-1}B+D.
+\end{equation}
+
+Al desarrollar:
+\begin{equation}
+G(s)=\frac{Q(s)}{U(s)}
+=
+\frac{K_f}
+{(Ls+R)(ms^2+cs+k)+K_fK_e s}.
+\label{eq:tf3}
+\end{equation}
+
+Expandiendo:
+\begin{equation}
+G(s)=
+\frac{K_f}
+{Lm\,s^3 + (Lc+Rm)s^2 + (Lk+Rc+K_fK_e)s + Rk}.
+\end{equation}
+
+\subsection{Analisis de estabilidad}
+
+La ecuacion caracteristica asociada a la planta nominal es:
+\[
+Lm\,s^3 + (Lc+Rm)s^2 + (Lk+Rc+K_fK_e)s + Rk = 0.
+\]
+
+Definiendo:
+\[
+a_3=Lm,\qquad a_2=Lc+Rm,\qquad a_1=Lk+Rc+K_fK_e,\qquad a_0=Rk,
+\]
+el criterio de Routh-Hurwitz para un polinomio cubico exige:
+\begin{equation}
+a_3>0,\quad a_2>0,\quad a_1>0,\quad a_0>0,\quad a_2a_1>a_3a_0.
+\end{equation}
+
+Como los parametros fisicos son positivos, la condicion relevante es:
+\begin{equation}
+(Lc+Rm)(Lk+Rc+K_fK_e)>LmRk.
+\end{equation}
+
+Por tanto, la planta nominal es de \textbf{tercer orden} y su estabilidad se analiza sobre ese modelo.
+
+\section{3. Comparacion entre modelos}
+
+La comparacion requerida por el enunciado se hace entre:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el modelo realista implementado en Simulink/Simscape;
+\item el modelo matematico aproximado usado para analisis y control.
+\end{itemize}
+
+La comparacion en lazo abierto se realiza frente a una entrada escalon y permite identificar diferencias entre:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item rapidez de respuesta;
+\item amortiguamiento;
+\item sobreimpulso;
+\item efectos fisicos no capturados por el modelo teorico.
+\end{itemize}
+
+\subsection{Espacio para grafica: lazo abierto teorico}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_lazo_abierto_tf.png}
+\caption{Respuesta en lazo abierto del modelo teorico obtenido a partir de la funcion de transferencia.}
+\label{fig:abierto_tf}
+\end{figure}
+
+\subsection{Espacio para grafica: lazo abierto Simscape}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_lazo_abierto_simscape.png}
+\caption{Respuesta en lazo abierto del modelo realista en Simscape.}
+\label{fig:abierto_simscape}
+\end{figure}
+
+\subsection{Texto para completar}
+
+\noindent\textbf{Texto sugerido:} Las Figs.~\ref{fig:abierto_tf} y \ref{fig:abierto_simscape} permiten comparar el modelo aproximado con el modelo realista. Aqui se debe discutir en que medida la planta teorica reproduce la dinamica dominante del sistema fisico y cuales diferencias aparecen por saturaciones, restricciones u otros efectos del modelo realista.
+
+\section{4. Diseno del controlador}
+
+\subsection{Modelo reducido para sintonia IMC-PID}
+
+Para la sintonia del PID se usa un modelo reducido de segundo orden:
+\begin{equation}
+G_r(s)=\frac{1}{ms^2+cs+k}.
+\end{equation}
+
+Con los valores dados:
+\[
+m=1,\qquad c=5,\qquad k=100,
+\]
+queda:
+\begin{equation}
+G_r(s)=\frac{1}{s^2+5s+100}.
+\label{eq:gred}
+\end{equation}
+
+Se escoge como modelo deseado:
+\begin{equation}
+T_d(s)=\frac{1}{\alpha s+1}.
+\end{equation}
+
+Entonces:
+\begin{equation}
+C(s)=\frac{T_d(s)}{G_r(s)\left[1-T_d(s)\right]}
+=
+\frac{s^2+5s+100}{\alpha s}.
+\label{eq:imc}
+\end{equation}
+
+\subsection{Controlador PID ideal}
+
+La forma ideal del PID es:
+\begin{equation}
+C_{PID}(s)=K_c\left(1+\frac{1}{\tau_I s}+\tau_D s\right).
+\end{equation}
+
+Al comparar con \eqref{eq:imc}, se obtiene:
+\begin{equation}
+K_c=\frac{5}{\alpha},\qquad
+\tau_I=0.05\ \text{s},\qquad
+\tau_D=0.2\ \text{s}.
+\end{equation}
+
+Si se desea mantener la ganancia proporcional en:
+\[
+P=K_c=50,
+\]
+entonces:
+\begin{equation}
+50=\frac{5}{\alpha}
+\quad\Rightarrow\quad
+\alpha=0.1\ \text{s}.
+\end{equation}
+
+Por tanto, el controlador PID ideal final es:
+\begin{equation}
+\boxed{
+C(s)=50\left(1+\frac{1}{0.05\,s}+0.2\,s\right)
+}
+\label{eq:pidfinal}
+\end{equation}
+
+En forma paralela:
+\[
+K_p=50,\qquad K_i=1000,\qquad K_d=10.
+\]
+
+\subsection{Equivalencia con el bloque PID}
+
+Si se usa el bloque:
+\begin{equation}
+C_b(s)=P\left(1+\frac{1}{Is}+D\frac{N}{1+N/s}\right),
+\end{equation}
+la equivalencia es:
+\[
+P=50,\qquad I=0.05,\qquad D=0.2.
+\]
+
+El termino derivativo del bloque es filtrado:
+\[
+D\frac{N}{1+N/s}
+=
+D\frac{Ns}{s+N},
+\]
+por lo que para un valor inicial razonable se puede tomar:
+\[
+N=10.
+\]
+
+Entonces, para Simulink:
+\begin{equation}
+\boxed{
+P=50,\qquad I=0.05,\qquad D=0.2,\qquad N=10
+}
+\label{eq:pidsimulink}
+\end{equation}
+
+\section{5. Evaluacion del desempeno}
+
+La evaluacion del desempeno del controlador debe hacerse tanto sobre el modelo aproximado como sobre el modelo realista. En particular, el enunciado pide estudiar:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item rechazo a perturbaciones;
+\item seguimiento de una referencia escalon variable;
+\item tiempo de establecimiento;
+\item tiempo de subida;
+\item sobreimpulso;
+\item error en estado estacionario.
+\end{itemize}
+
+\subsection{Espacio para grafica: lazo cerrado Simscape}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_lazo_cerrado_simscape.png}
+\caption{Respuesta en lazo cerrado del modelo realista en Simscape con el controlador IMC-PID.}
+\label{fig:cerrado_simscape}
+\end{figure}
+
+\subsection{Espacio para tabla de metricas}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Caso} & \textbf{$t_r$} & \textbf{$t_s$} & \textbf{$M_p$} & \textbf{$e_{ss}$} \\
+\midrule
+Lazo abierto teorico & -- & -- & -- & -- \\
+Lazo abierto Simscape & -- & -- & -- & -- \\
+Lazo cerrado Simscape & -- & -- & -- & -- \\
+\bottomrule
+\end{tabular}
+\caption{Metricas de desempeno a completar con los resultados experimentales o de simulacion.}
+\label{tab:metricas}
+\end{table}
+
+\subsection{Texto para completar}
+
+\noindent\textbf{Texto sugerido:} En la Fig.~\ref{fig:cerrado_simscape} se presenta la respuesta del sistema realista en lazo cerrado. Aqui se debe analizar si el controlador reduce la transmision de vibracion hacia la plataforma y si mantiene el sensor suficientemente estable para realizar la medicion. Los resultados cuantitativos deben resumirse en la Tabla~\ref{tab:metricas}.
+
+\section{Espacio para bono}
+
+El enunciado indica que se puede obtener una bonificacion adicional si el proyecto incluye una visualizacion tridimensional del sistema. Por esta razon se deja esta seccion opcional para documentar ese desarrollo.
+
+\subsection{Visualizacion 3D opcional}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{fig_bono_visualizacion_3d.png}
+\caption{Visualizacion tridimensional opcional del sistema.}
+\label{fig:bono_3d}
+\end{figure}
+
+\noindent\textbf{Texto sugerido:} En la Fig.~\ref{fig:bono_3d} se muestra la visualizacion tridimensional del sistema. Esta parte es opcional y se incluye solo si se desarrolla la bonificacion correspondiente.
+
+\section{Conclusiones}
+
+El proyecto cumple con lo solicitado en el enunciado: se propone un sistema SISO de al menos tercer orden, se construye un modelo realista, se deriva un modelo matematico nominal, se dise\~na un controlador por IMC-PID y se deja estructurada la comparacion entre modelos y la evaluacion del desempeno.
+
+Con los parametros $m=1$, $c=5$ y $k=100$, y manteniendo $P=50$, el controlador final queda:
+\[
+C(s)=50\left(1+\frac{1}{0.05\,s}+0.2\,s\right),
+\]
+y su forma equivalente para el bloque PID es:
+\[
+P=50,\qquad I=0.05,\qquad D=0.2,\qquad N=10.
+\]
+
+\end{document}

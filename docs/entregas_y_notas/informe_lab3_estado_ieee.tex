@@ -1,0 +1,384 @@
+\documentclass[conference]{IEEEtran}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{float}
+\usepackage[section]{placeins}
+\graphicspath{{fig_lab3/}}
+
+\setlength{\textfloatsep}{6pt}
+\setlength{\floatsep}{4pt}
+\setlength{\intextsep}{6pt}
+
+\newcommand{\fitmat}[1]{\resizebox{0.96\columnwidth}{!}{$\displaystyle #1$}}
+
+\title{Laboratorio 3: Control en Representaci\'on de Estados}
+
+\author{
+\IEEEauthorblockN{Nombre Integrante 1, Nombre Integrante 2}
+\IEEEauthorblockA{
+Universidad de los Andes, Bogot\'a, Colombia\\
+correo1@uniandes.edu.co, correo2@uniandes.edu.co}
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Introducci\'on}
+Este informe resume el desarrollo de las pr\'acticas 3.1 y 3.2 del curso de an\'alisis de sistemas de control, ambas enfocadas en dise\~no e implementaci\'on de controladores en representaci\'on de estados. La pr\'actica 3.1 aborda el sistema Quanser SRV02 ROTPEN, cuyo objetivo es estabilizar el p\'endulo invertido y hacer seguimiento de referencia en el \'angulo del brazo rotatorio. La pr\'actica 3.2 estudia el levitador magn\'etico MagLev, donde se dise\~na un controlador de realimentaci\'on de estados, una compensaci\'on de referencia y una acci\'on integral para regular la posici\'on de la esfera.
+
+En ambos casos, la metodolog\'ia parte de la linealizaci\'on del sistema no lineal alrededor de un punto de operaci\'on, contin\'ua con el c\'alculo de las matrices del modelo de estado y concluye con el an\'alisis de estabilidad, controlabilidad, observabilidad y desempe\~no temporal. Dado que la entrega solicitada para este laboratorio exige \'unicamente las secciones de introducci\'on, resultados, an\'alisis y conclusiones, el presente documento separa primero los resultados num\'ericos, los diagramas y las gr\'aficas, y posteriormente desarrolla la interpretaci\'on comparativa entre simulaci\'on y experimento usando las figuras finales exportadas del trabajo realizado.
+
+\section{Resultados}
+
+\subsection{Pr\'actica 3.1: resultados de simulaci\'on}
+
+Con la definici\'on de estados
+\begin{equation}
+x_1=\theta, \qquad x_2=\alpha, \qquad x_3=\dot{\theta}, \qquad x_4=\dot{\alpha},
+\end{equation}
+y entrada $u=V_m$, el punto de operaci\'on considerado es
+\begin{equation}
+\theta=\alpha=\dot{\theta}=\dot{\alpha}=0
+\end{equation}
+\noindent
+\textbf{Ecuaciones linealizadas en el punto de operaci\'on.} La linealizaci\'on alrededor de ese equilibrio conduce a
+\begin{equation}
+\dot{x}_1=x_3, \qquad \dot{x}_2=x_4,
+\end{equation}
+\begin{equation}
+\dot{x}_3=81.2304\,x_2-28.8469\,x_3-0.9318\,x_4+51.8559\,u,
+\end{equation}
+\begin{equation}
+\dot{x}_4=121.6276\,x_2-27.7325\,x_3-1.3952\,x_4+49.8525\,u.
+\end{equation}
+
+\noindent
+\textbf{Representaci\'on en espacio de estados del sistema linealizado.} A partir de las ecuaciones anteriores, el modelo linealizado queda
+\begin{equation}
+\dot{x}=Ax+Bu,
+\end{equation}
+con
+\begin{equation}
+A=
+\begin{bmatrix}
+0 & 0 & 1 & 0\\
+0 & 0 & 0 & 1\\
+0 & 81.2304 & -28.8469 & -0.9318\\
+0 & 121.6276 & -27.7325 & -1.3952
+\end{bmatrix}.
+\end{equation}
+\begin{equation}
+B=
+\begin{bmatrix}
+0\\
+0\\
+51.8559\\
+49.8525
+\end{bmatrix}.
+\end{equation}
+
+Para la implementaci\'on final y la exportaci\'on simult\'anea de las variables medidas se us\'o
+\begin{equation}
+C=
+\begin{bmatrix}
+0 & 1 & 0 & 0\\
+1 & 0 & 0 & 0
+\end{bmatrix}.
+\end{equation}
+\begin{equation}
+D=
+\begin{bmatrix}
+0\\
+0
+\end{bmatrix}.
+\end{equation}
+\noindent
+Si se toma \'unicamente la salida m\'inima solicitada en la gu\'ia, entonces
+\begin{equation}
+C_{\alpha}=
+\begin{bmatrix}
+0 & 1 & 0 & 0
+\end{bmatrix}.
+\end{equation}
+\begin{equation}
+D_{\alpha}=0.
+\end{equation}
+
+Los polos en lazo abierto son
+\begin{equation}
+p(A)=\{0,\,-32.3563,\,7.3762,\,-5.2620\}.
+\end{equation}
+La matriz de controlabilidad es
+\begin{equation}
+\fitmat{
+\mathcal{C}=
+\begin{bmatrix}
+0 & 51.8559 & -1542.3355 & 49946.0301\\
+0 & 49.8525 & -1507.6463 & 50939.7161\\
+51.8559 & -1542.3355 & 49946.0301 & -1610722.6884\\
+49.8525 & -1507.6463 & 50939.7161 & -1639570.3906
+\end{bmatrix}}
+\end{equation}
+con
+\begin{equation}
+\mathrm{rank}(\mathcal{C})=4.
+\end{equation}
+La matriz de observabilidad asociada a la implementaci\'on final es
+\begin{equation}
+\fitmat{
+\mathcal{O}=
+\begin{bmatrix}
+0 & 1 & 0 & 0\\
+1 & 0 & 0 & 0\\
+0 & 0 & 0 & 1\\
+0 & 0 & 1 & 0\\
+0 & 121.6276 & -27.7325 & -1.3952\\
+0 & 81.2304 & -28.8469 & -0.9318\\
+0 & -2422.4164 & 838.6902 & 149.4152\\
+0 & -2456.5817 & 857.9874 & 109.4099
+\end{bmatrix}}
+\end{equation}
+con
+\begin{equation}
+\mathrm{rank}(\mathcal{O})=4.
+\end{equation}
+Si se restringe el sistema a la salida m\'inima $y=\alpha$, la observabilidad se reduce a
+\begin{equation}
+\fitmat{
+\mathcal{O}_{\alpha}=
+\begin{bmatrix}
+0 & 1 & 0 & 0\\
+0 & 0 & 0 & 1\\
+0 & 121.6276 & -27.7325 & -1.3952\\
+0 & -2422.4164 & 838.6902 & 149.4152
+\end{bmatrix}}
+\end{equation}
+con
+\begin{equation}
+\mathrm{rank}(\mathcal{O}_{\alpha})=3.
+\end{equation}
+
+Con las especificaciones
+\begin{equation}
+\zeta=0.7, \qquad \omega_n=4,
+\end{equation}
+los polos dominantes son
+\begin{equation}
+p_{1,2}=-2.8 \pm j\,2.8566.
+\end{equation}
+Al a\~nadir los polos en $-30$ y $-40$, el polinomio deseado es
+\begin{align}
+p_d(s)&=(s+30)(s+40)(s^2+5.6s+16) \\
+&=s^4+75.6s^3+1608s^2+7840s+19200,
+\end{align}
+y el vector del controlador es
+\begin{equation}
+K=
+\begin{bmatrix}
+-8.5047 & 45.3961 & -4.1266 & 5.2023
+\end{bmatrix}.
+\end{equation}
+
+La implementaci\'on en Simulink se realiz\'o con una referencia cuadrada de amplitud $20^\circ$ y frecuencia $0.1$ Hz para $x_1=\theta$. En la simulaci\'on lineal, la salida de $\theta$ alcanza picos cercanos a $\pm 28.64^\circ$, la salida de $\alpha$ permanece aproximadamente dentro de $\pm 8.72^\circ$ y la se\~nal de control se mantiene entre $\pm 5.42$ V.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{p31_block_diagram.png}
+\caption{Diagrama de bloques implementado para la pr\'actica 3.1 con referencia en $x_1$, realimentaci\'on de estados y salidas exportadas en $\alpha$ y $\theta$.}
+\label{fig:p31_bloques}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{p31_sim_results.png}
+\caption{Resultados de simulaci\'on de la pr\'actica 3.1: (a) referencia y salida de $x_1$, (b) referencia y salida de $x_2$, (c) se\~nal de control.}
+\label{fig:p31_sim}
+\end{figure}
+
+\subsection{Pr\'actica 3.1: resultados experimentales}
+
+Los resultados experimentales muestran que la referencia de $x_1$ se mantiene entre $-20^\circ$ y $20^\circ$, mientras que la salida asociada a $\theta$ alcanza aproximadamente $-185.27^\circ$ y $83.32^\circ$. La se\~nal asociada a $x_2$ se encuentra entre $-180^\circ$ y $179.82^\circ$, y la se\~nal de control toma valores aproximados entre $-7.03$ V y $7.80$ V.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth,height=0.80\textheight,keepaspectratio]{p31_exp_results.png}
+\caption{Resultados experimentales de la pr\'actica 3.1: (a) referencia y salida de $x_1$, (b) referencia y salida de $x_2$, (c) se\~nal de control.}
+\label{fig:p31_exp}
+\end{figure}
+
+\subsection{Pr\'actica 3.2: resultados de simulaci\'on}
+
+Para el MagLev se us\'o el punto de operaci\'on
+\begin{equation}
+x_0=
+\begin{bmatrix}
+0.006\\
+0\\
+0.86
+\end{bmatrix},
+\end{equation}
+donde $x_1$ es la posici\'on de la esfera, $x_2$ su velocidad y $x_3$ la corriente de la bobina. El valor exacto de equilibrio de corriente es
+\begin{equation}
+x_{03,\mathrm{eq}}=\sqrt{\frac{2M_bgx_{01}^2}{K_m}}=0.8576~\mathrm{A},
+\end{equation}
+y la entrada correspondiente al valor implementado $x_{03}=0.86$ es
+\begin{equation}
+u_0=(R_s+R_c)x_{03}=9.4600~\mathrm{V}.
+\end{equation}
+Para referencia, si se usara el equilibrio exacto, el voltaje nominal ser\'ia $9.4333$ V.
+
+\noindent
+\textbf{Ecuaciones linealizadas en el punto de operaci\'on.} En variables de desviaci\'on respecto al equilibrio anterior, las ecuaciones linealizadas son
+\begin{equation}
+\dot{x}_1=x_2,
+\end{equation}
+\begin{equation}
+\dot{x}_2=3288.5210\,x_1-22.9432\,x_3,
+\end{equation}
+\begin{equation}
+\dot{x}_3=-26.6667\,x_3+2.4242\,u.
+\end{equation}
+
+\noindent
+\textbf{Representaci\'on en espacio de estados del sistema linealizado.} El modelo linealizado es
+\begin{equation}
+\dot{x}=Ax+Bu, \qquad y=Cx,
+\end{equation}
+con
+\begin{equation}
+A=
+\begin{bmatrix}
+0 & 1 & 0\\
+3288.5210 & 0 & -22.9432\\
+0 & 0 & -26.6667
+\end{bmatrix}.
+\end{equation}
+\begin{equation}
+B=
+\begin{bmatrix}
+0\\
+0\\
+2.4242
+\end{bmatrix}.
+\end{equation}
+\begin{equation}
+C=
+\begin{bmatrix}
+1 & 0 & 0
+\end{bmatrix}.
+\end{equation}
+
+Los polos en lazo abierto son
+\begin{equation}
+p(A)=\{57.3456,\,-57.3456,\,-26.6667\}.
+\end{equation}
+La matriz de controlabilidad es
+\begin{equation}
+\fitmat{
+\mathcal{C}=
+\begin{bmatrix}
+0 & 0 & -55.6198\\
+0 & -55.6198 & 1483.1948\\
+2.4242 & -64.6465 & 1723.9057
+\end{bmatrix}}
+\end{equation}
+y la matriz de observabilidad es
+\begin{equation}
+\fitmat{
+\mathcal{O}=
+\begin{bmatrix}
+1 & 0 & 0\\
+0 & 1 & 0\\
+3288.5210 & 0 & -22.9432
+\end{bmatrix}}
+\end{equation}
+con
+\begin{equation}
+\mathrm{rank}(\mathcal{C})=3, \qquad \mathrm{rank}(\mathcal{O})=3.
+\end{equation}
+
+El polinomio caracter\'istico deseado es
+\begin{equation}
+(s+100)(s^2+28s+400)=s^3+128s^2+3200s+40000,
+\end{equation}
+y el vector de ganancias obtenido es
+\begin{equation}
+K=
+\begin{bmatrix}
+-8287.1683 & -116.6585 & 41.8
+\end{bmatrix}.
+\end{equation}
+La ganancia de referencia calculada es
+\begin{equation}
+K_g \approx -719.1683,
+\end{equation}
+y en la implementaci\'on final se adopt\'o el valor aproximado $K_g=-705$, mientras que para el controlador integral se us\'o
+\begin{equation}
+K_e=-4000.
+\end{equation}
+
+En simulaci\'on, la realimentaci\'on de estados sin $K_g$ entrega una salida final de $-8.34\times 10^{-6}$ m ante una referencia de $0.006$ m, por lo que estabiliza el sistema pero no sigue la consigna. Con el valor implementado $K_g=-705$, la salida final es aproximadamente $0.005882$ m, el sobreimpulso es cercano a $2.43\%$ y el tiempo de establecimiento al $2\%$ es cercano a $0.573$ s, aunque permanece un sesgo estacionario peque\~no porque el $K_g$ implementado no coincide exactamente con el calculado. Con control integral, la salida final es $0.0060000$ m, el sobreimpulso es aproximadamente $3.28\%$ y el tiempo de establecimiento es cercano a $0.504$ s.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{p32_block_diagrams.png}
+\caption{Diagramas de bloques de la pr\'actica 3.2: (a) realimentaci\'on de estados, (b) compensaci\'on con $K_g$, (c) control integral.}
+\label{fig:p32_bloques}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{p32_sim_results.png}
+\caption{Resultados de simulaci\'on de la pr\'actica 3.2: (a) sin $K_g$, (b) con $K_g=-705$, (c) con control integral $K_e=-4000$.}
+\label{fig:p32_sim}
+\end{figure}
+
+\subsection{Pr\'actica 3.2: resultados experimentales}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\columnwidth]{p32_exp_results.jpg}
+\caption{Respuesta experimental del MagLev para la referencia de $0.006$ m.}
+\label{fig:p32_exp}
+\end{figure}
+
+\clearpage
+
+\section{An\'alisis}
+
+\subsection{Pr\'actica 3.1}
+
+Los resultados de simulaci\'on de la Fig.~\ref{fig:p31_sim} muestran que la realimentaci\'on de estados estabiliza el modelo linealizado y mantiene acotado el movimiento del p\'endulo. En la Fig.~\ref{fig:p31_sim}(a), el estado $x_1=\theta$ sigue la referencia cuadrada con una din\'amica r\'apida, aunque con un sobreimpulso visible. En la Fig.~\ref{fig:p31_sim}(b), el estado $x_2=\alpha$ se mantiene alrededor de la vertical con desviaciones moderadas, lo que indica que el control logra estabilizar el modo inestable del sistema. La Fig.~\ref{fig:p31_sim}(c) confirma que el esfuerzo de control necesario en simulaci\'on permanece en un rango razonable.
+
+La estructura empleada para implementar esta estrategia se resume en la Fig.~\ref{fig:p31_bloques}. Ese diagrama deja claro que la referencia se aplica sobre el estado del brazo y que la ley de control se construye a partir de la realimentaci\'on del vector de estados, coherente con la formulaci\'on te\'orica usada para obtener $K$.
+
+La Fig.~\ref{fig:p31_exp} evidencia que el comportamiento experimental es m\'as exigente que el del modelo lineal. En comparaci\'on con la Fig.~\ref{fig:p31_sim}, aparecen excursiones angulares m\'as grandes, mayor esfuerzo de control y se\~nales con envolvimiento angular. Esto indica que el controlador dise\~nado a partir de la linealizaci\'on captura la estructura principal de la din\'amica, pero no reproduce de forma exacta todos los efectos del sistema real, especialmente cuando la trayectoria se aleja del entorno peque\~no alrededor del equilibrio.
+
+Desde el punto de vista estructural, la controlabilidad obtenida garantiza que los modos del sistema pueden desplazarse mediante la entrada y que, por tanto, s\'i existe base matem\'atica para dise\~nar un controlador de realimentaci\'on de estados. La observabilidad depende de la elecci\'on de salida: con la salida m\'inima $y=\alpha$ no se observan todos los estados, mientras que con las dos mediciones angulares empleadas en la implementaci\'on s\'i se obtiene observabilidad completa. La implicaci\'on pr\'actica es que un observador de estados solo ser\'ia plenamente viable si se dispone de suficiente informaci\'on de medici\'on.
+
+Si la condici\'on inicial del sistema estuviera lejos del punto de equilibrio, el modelo lineal dejar\'ia de ser una aproximaci\'on confiable y el controlador dise\~nado podr\'ia no estabilizar adecuadamente el sistema. En un p\'endulo invertido esto se traducir\'ia en oscilaciones grandes, saturaci\'on de la se\~nal de control, movimientos no previstos por el modelo lineal e incluso la p\'erdida de la posici\'on vertical.
+
+\subsection{Pr\'actica 3.2}
+
+La Fig.~\ref{fig:p32_sim} permite comparar directamente los tres esquemas de control del MagLev. La Fig.~\ref{fig:p32_sim}(a) muestra que la realimentaci\'on de estados sin compensaci\'on de referencia estabiliza el sistema, pero no logra seguimiento de la consigna; en otras palabras, regula la din\'amica, pero deja un error estacionario casi total. La Fig.~\ref{fig:p32_sim}(b) muestra que la inclusi\'on de $K_g$ mejora de forma importante el seguimiento y produce una respuesta r\'apida, aunque conserva un sesgo peque\~no porque el valor implementado $K_g=-705$ es una aproximaci\'on del valor calculado. La Fig.~\ref{fig:p32_sim}(c) indica que el control integral elimina ese sesgo y logra seguimiento pr\'acticamente exacto, con una respuesta ligeramente m\'as lenta.
+
+Los esquemas de implementaci\'on mostrados en la Fig.~\ref{fig:p32_bloques} permiten interpretar estas diferencias. El caso sin $K_g$ usa solamente la realimentaci\'on de estados, mientras que los otros dos casos incorporan mecanismos adicionales para corregir el error de seguimiento: una precompensaci\'on est\'atica en un caso y una din\'amica integradora en el otro.
+
+La respuesta experimental mostrada en la Fig.~\ref{fig:p32_exp} debe compararse principalmente con las Figs.~\ref{fig:p32_sim}(b) y \ref{fig:p32_sim}(c), pues son los dos casos que realmente buscan seguimiento de referencia. En la curva experimental se observan oscilaciones residuales y perturbaciones visibles alrededor de $0.006$ m, adem\'as de transitorios m\'as bruscos que los del modelo lineal. Eso debe interpretarse como efecto de ruido de medici\'on, retardo, incertidumbre param\'etrica y no idealidades del actuador, no como una contradicci\'on del dise\~no en espacio de estados.
+
+La ventaja principal de la representaci\'on de estados para la implementaci\'on de un controlador es que permite trabajar directamente con la din\'amica interna del sistema. Eso facilita analizar estabilidad interna, verificar controlabilidad y observabilidad, ubicar polos en posiciones deseadas, introducir ganancias de referencia, a\~nadir acci\'on integral de forma sistem\'atica y, si fuese necesario, dise\~nar observadores para estimar estados no medidos. En sistemas inestables y acoplados como el MagLev y el p\'endulo invertido, esta formulaci\'on resulta especialmente \'util porque organiza el dise\~no del controlador de forma mucho m\'as completa que una descripci\'on basada solo en entrada y salida.
+
+\section{Conclusiones}
+La pr\'actica 3.1 mostr\'o que el p\'endulo invertido rotatorio es inestable en lazo abierto y que el dise\~no por realimentaci\'on de estados permite estabilizarlo y obligarlo a seguir una referencia en el \'angulo del brazo. El sistema result\'o completamente controlable, mientras que la observabilidad depende de la elecci\'on de salidas: con la salida m\'inima $y=\alpha$ no se observan todos los estados, pero con las dos mediciones angulares disponibles en el laboratorio s\'i se recupera observabilidad completa.
+
+La pr\'actica 3.2 confirm\'o que el MagLev tambi\'en es inestable en lazo abierto, pero completamente controlable y observable alrededor del punto de operaci\'on elegido. El vector $K$ estabiliza la din\'amica, pero la simulaci\'on dej\'o claro que la realimentaci\'on de estados sin compensaci\'on de referencia no basta para seguir una consigna constante. La ganancia de referencia mejora el seguimiento, aunque el valor implementado $K_g=-705$ deja un sesgo peque\~no frente al valor calculado; la acci\'on integral, en cambio, elimina ese error estacionario de forma m\'as robusta.
+
+En conjunto, ambas pr\'acticas muestran que la representaci\'on de estados no s\'olo sirve para escribir un modelo compacto, sino para responder preguntas estructurales del sistema, justificar el dise\~no del controlador y comparar con criterio t\'ecnico el comportamiento de simulaci\'on frente al comportamiento experimental. La diferencia entre ambos resultados confirma, adem\'as, que la linealizaci\'on es una herramienta local: es muy \'util para dise\~nar, pero siempre debe contrastarse con la planta real y con las limitaciones f\'isicas de la implementaci\'on.
+
+\end{document}

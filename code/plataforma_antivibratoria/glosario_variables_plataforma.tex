@@ -1,0 +1,191 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{siunitx}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    urlcolor=blue!50!black
+}
+
+\title{Glosario de Variables y S\'imbolos\\Plataforma Antivibratoria Activa}
+\author{Archivo complementario para el informe}
+\date{15 de abril de 2026}
+
+\begin{document}
+
+\maketitle
+
+Este glosario recopila las variables, par\'ametros y s\'imbolos usados en el modelado mec\'anico, el\'ectrico, la linealizaci\'on y el an\'alisis en Laplace del proyecto de plataforma antivibratoria activa.
+
+\section{Convenciones de notaci\'on}
+
+\begin{itemize}[leftmargin=1.2cm]
+\item Si $r(t)$ es una variable cualquiera, entonces $\dot r = \dfrac{dr}{dt}$ es su primera derivada temporal y $\ddot r = \dfrac{d^2r}{dt^2}$ es su segunda derivada temporal.
+\item El s\'imbolo $\tilde{(\cdot)}$ indica \textbf{variable incremental} respecto a un equilibrio est\'atico.
+\item El s\'imbolo $\delta(\cdot)$ indica \textbf{peque\~na perturbaci\'on} o desviaci\'on local alrededor del punto de linealizaci\'on.
+\item El super\'indice ${}^\star$ indica \textbf{valor de equilibrio} o punto de operaci\'on.
+\item Las letras may\'usculas en Laplace, como $Q(s)$ o $U(s)$, representan la transformada de Laplace de sus respectivas variables temporales.
+\end{itemize}
+
+\renewcommand{\arraystretch}{1.2}
+
+\section{Variables cinem\'aticas y de salida}
+
+\begin{center}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{2.8cm} >{\raggedright\arraybackslash}p{9.2cm} >{\raggedright\arraybackslash}p{2.2cm}}
+\toprule
+\textbf{S\'imbolo} & \textbf{Significado} & \textbf{Unidad} \\
+\midrule
+$t$ & Tiempo. Variable independiente del problema din\'amico. & s \\
+$x(t)$ & Posici\'on absoluta de la plataforma superior. & m \\
+$z(t)$ & Posici\'on absoluta de la base vibratoria. & m \\
+$q(t)$ & Desplazamiento relativo entre plataforma y base, definido como $q=x-z$. Tambi\'en representa la deformaci\'on de la suspensi\'on. & m \\
+$\dot x(t)$ & Velocidad absoluta de la plataforma. & m/s \\
+$\dot z(t)$ & Velocidad absoluta de la base. & m/s \\
+$\dot q(t)$ & Velocidad relativa entre plataforma y base. & m/s \\
+$\ddot x(t)$ & Aceleraci\'on absoluta de la plataforma. & m/s$^2$ \\
+$\ddot z(t)$ & Aceleraci\'on absoluta de la base. Es la excitaci\'on externa de soporte. & m/s$^2$ \\
+$\ddot q(t)$ & Aceleraci\'on relativa entre plataforma y base. & m/s$^2$ \\
+$v$ & Variable auxiliar definida como $v=\dot q$. Se usa para expresar el sistema en espacio de estados. & m/s \\
+$y$ & Salida del sistema. Seg\'un el caso, puede ser la posici\'on relativa $q$ o la posici\'on absoluta $x=q+z$. & m \\
+$w$ & Perturbaci\'on reescrita como aceleraci\'on de base: $w=\ddot z$. & m/s$^2$ \\
+$a$ & Aceleraci\'on gen\'erica usada en la forma general de Newton, $\sum F = ma$. & m/s$^2$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Fuerzas, se\~nales el\'ectricas y funciones no lineales}
+
+\begin{center}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{9.0cm} >{\raggedright\arraybackslash}p{2.2cm}}
+\toprule
+\textbf{S\'imbolo} & \textbf{Significado} & \textbf{Unidad} \\
+\midrule
+$\sum F$ & Suma de todas las fuerzas aplicadas sobre la masa de la plataforma. & N \\
+$F_s$ & Fuerza del resorte lineal, dada por la ley de Hooke. & N \\
+$F_d$ & Fuerza del amortiguador viscoso. & N \\
+$F_a$ & Fuerza activa aplicada por el actuador entre base y plataforma. & N \\
+$F_{\text{pert}}$ & Fuerza inercial equivalente asociada a la excitaci\'on de base; en coordenada relativa vale $-m\ddot z$. & N \\
+$F_{s,\text{nl}}$ & Fuerza el\'astica no lineal cuando se incluye el t\'ermino c\'ubico. & N \\
+$F_f$ & Fuerza de fricci\'on seca regularizada. & N \\
+$F_{\text{topes}}$ & Fuerza de contacto generada cuando la deformaci\'on excede el recorrido permitido. & N \\
+$\Delta \ell$ & Deformaci\'on geom\'etrica del resorte respecto a su longitud de equilibrio. En este sistema, $\Delta \ell=x-z=q$. & m \\
+$\Delta \dot \ell$ & Velocidad relativa de deformaci\'on del amortiguador. En este sistema, $\Delta \dot \ell=\dot x-\dot z=\dot q$. & m/s \\
+$u(t)$ & Voltaje de mando o se\~nal de control aplicada al actuador. & V \\
+$u_{\text{act}}$ & Voltaje efectivamente aplicado luego de pasar por la saturaci\'on del actuador. & V \\
+$\operatorname{sat}(u)$ & Funci\'on de saturaci\'on. Limita la se\~nal de control a un rango f\'isicamente realizable. & V \\
+$i(t)$ & Corriente el\'ectrica del actuador. Es el tercer estado del modelo electrome\'canico exacto. & A \\
+$e_b$ & Fuerza contraelectromotriz o back-EMF inducida por el movimiento relativo del actuador. & V \\
+$\tanh(\cdot)$ & Funci\'on tangente hiperb\'olica usada para suavizar la fricci\'on seca y hacerla derivable en velocidad cero. & adim. \\
+$\operatorname{sech}(\cdot)$ & Funci\'on hiperb\'olica que aparece al derivar $\tanh(\cdot)$ durante la linealizaci\'on. & adim. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Par\'ametros f\'isicos del sistema}
+
+\begin{center}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{9.0cm} >{\raggedright\arraybackslash}p{2.2cm}}
+\toprule
+\textbf{S\'imbolo} & \textbf{Significado} & \textbf{Unidad} \\
+\midrule
+$m$ & Masa equivalente de la plataforma superior y del equipo sensible montado sobre ella. & kg \\
+$k$ & Rigidez lineal equivalente del elemento el\'astico entre base y plataforma. & N/m \\
+$c$ & Coeficiente de amortiguamiento viscoso equivalente entre base y plataforma. & N\,s/m \\
+$k_3$ & Coeficiente de rigidez no lineal c\'ubica. Modela desviaciones de la ley de Hooke para deformaciones mayores. & N/m$^3$ \\
+$F_c$ & Nivel o amplitud de la fricci\'on tipo Coulomb en la regularizaci\'on suave. & N \\
+$v_\varepsilon$ & Velocidad de suavizado de la fricci\'on regularizada. Controla qu\'e tan abrupta es la transici\'on de $\tanh(\dot q/v_\varepsilon)$. & m/s \\
+$L$ & Inductancia del devanado del actuador. Introduce la din\'amica el\'ectrica de la corriente. & H \\
+$R$ & Resistencia el\'ectrica del devanado del actuador. & $\Omega$ \\
+$K_t$ & Constante de fuerza del actuador. Relaciona fuerza con corriente: $F_a=K_t i$. & N/A \\
+$K_e$ & Constante de back-EMF. Relaciona voltaje inducido con velocidad relativa: $e_b=K_e\dot q$. & V\,s/m \\
+$q_{\max}$ & M\'axima deformaci\'on admisible antes de que entren en contacto los topes mec\'anicos. & m \\
+$k_t$ & Rigidez equivalente del tope mec\'anico cuando hay contacto. & N/m \\
+$c_t$ & Amortiguamiento equivalente del contacto con el tope. & N\,s/m \\
+$g$ & Aceleraci\'on de la gravedad. Solo aparece expl\'icitamente si se modela el movimiento vertical antes de trasladarse al equilibrio est\'atico. & m/s$^2$ \\
+$mg$ & Peso de la plataforma. Es la fuerza gravitacional aplicada sobre la masa. & N \\
+$\tau_a$ & Constante de tiempo del actuador simplificado de primer orden, definida como $\tau_a=L/R$. & s \\
+$K_a$ & Ganancia est\'atica del actuador simplificado en la relaci\'on entre voltaje y fuerza, definida como $K_a=K_t/R$. & N/V \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Variables de equilibrio, linealizaci\'on y modelo incremental}
+
+\begin{center}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{9.0cm} >{\raggedright\arraybackslash}p{2.2cm}}
+\toprule
+\textbf{S\'imbolo} & \textbf{Significado} & \textbf{Unidad} \\
+\midrule
+$x_0$ & Posici\'on absoluta de equilibrio est\'atico de la plataforma cuando se considera gravedad en eje vertical. & m \\
+$z_0$ & Posici\'on absoluta de equilibrio est\'atico de la base. & m \\
+$F_{a0}$ & Fuerza del actuador en el equilibrio est\'atico. & N \\
+$\tilde x$ & Desviaci\'on incremental de la posici\'on de la plataforma respecto al equilibrio est\'atico. & m \\
+$\tilde z$ & Desviaci\'on incremental de la posici\'on de la base respecto al equilibrio est\'atico. & m \\
+$\tilde F_a$ & Desviaci\'on incremental de la fuerza del actuador respecto al equilibrio est\'atico. & N \\
+$x^\star$ & Vector de estado en el punto de equilibrio usado para linealizar. & seg\'un componente \\
+$u^\star$ & Entrada de equilibrio usada para linealizar. & V \\
+$w^\star$ & Perturbaci\'on de equilibrio usada para linealizar. & m/s$^2$ \\
+$\delta x$ & Peque\~na variaci\'on del vector de estado alrededor del equilibrio: $\delta x=x-x^\star$. & seg\'un componente \\
+$\delta u$ & Peque\~na variaci\'on de la entrada alrededor del equilibrio. & V \\
+$\delta w$ & Peque\~na variaci\'on de la perturbaci\'on alrededor del equilibrio. & m/s$^2$ \\
+$c_{\text{eq}}$ & Amortiguamiento equivalente local que aparece al linealizar estrictamente la fricci\'on regularizada: $c_{\text{eq}}=c+F_c/v_\varepsilon$. & N\,s/m \\
+$\xi$ & Variable auxiliar adimensional usada en la aproximaci\'on local $\tanh(\xi)\approx \xi$. & adim. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Estados, matrices y dominio de Laplace}
+
+\begin{center}
+\small
+\begin{tabular}{>{\raggedright\arraybackslash}p{3.0cm} >{\raggedright\arraybackslash}p{9.0cm} >{\raggedright\arraybackslash}p{2.2cm}}
+\toprule
+\textbf{S\'imbolo} & \textbf{Significado} & \textbf{Unidad} \\
+\midrule
+$x_1$ & Primer estado del sistema, igual a la deformaci\'on relativa: $x_1=q$. & m \\
+$x_2$ & Segundo estado del sistema, igual a la velocidad relativa: $x_2=\dot q=v$. & m/s \\
+$x_3$ & Tercer estado del sistema, igual a la corriente del actuador: $x_3=i$. & A \\
+$x$ & Vector de estado completo: $x=[x_1\;x_2\;x_3]^T$. & mixta \\
+$A$ & Matriz de din\'amica del sistema linealizado. & depende del elemento \\
+$B$ & Matriz de entrada del sistema linealizado respecto a la se\~nal de control. & depende del elemento \\
+$E$ & Matriz de entrada de perturbaci\'on del sistema linealizado respecto a $w=\ddot z$. & depende del elemento \\
+$C$ & Matriz de salida del sistema cuando se selecciona $y=q$ o la variable de salida correspondiente. & depende del elemento \\
+$s$ & Variable compleja del dominio de Laplace. & 1/s \\
+$Q(s)$ & Transformada de Laplace de $q(t)$. & m \\
+$I(s)$ & Transformada de Laplace de $i(t)$. & A \\
+$U(s)$ & Transformada de Laplace de $u(t)$. & V \\
+$G(s)$ & Funci\'on de transferencia de la planta nominal. En este proyecto, relaciona $Q(s)$ con $U(s)$. & m/V \\
+$a_3,a_2,a_1,a_0$ & Coeficientes del polinomio caracter\'istico c\'ubico de la planta lineal exacta. Se usan en el criterio de Routh-Hurwitz. & seg\'un coeficiente \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Lectura r\'apida}
+
+Las cuatro distinciones m\'as importantes al leer o explicar las ecuaciones son:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item $x$ es posici\'on absoluta de la plataforma, mientras que $q$ es desplazamiento relativo.
+\item $u$ es voltaje de control, mientras que $i$ es corriente y $F_a$ es fuerza.
+\item $w=\ddot z$ no es una fuerza aplicada directamente, sino la aceleraci\'on de la base reescrita como perturbaci\'on.
+\item $A$, $B$, $C$ y $E$ no son variables f\'isicas medibles por s\'i solas, sino matrices del modelo linealizado.
+\end{itemize}
+
+\end{document}

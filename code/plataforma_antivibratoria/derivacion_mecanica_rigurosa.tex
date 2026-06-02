@@ -1,0 +1,807 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-nodecimaldot]{babel}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{geometry}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{siunitx}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue!50!black,
+    urlcolor=blue!50!black
+}
+
+\title{Derivaci\'on Mec\'anica Rigurosa\\Plataforma Antivibratoria Activa}
+\author{Versi\'on corregida para estudio e informe}
+\date{15 de abril de 2026}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Punto de partida: qu\'e significa \textit{m\'as rigor} en este proyecto}
+
+Antes de empezar hay que aclarar una idea importante: \textbf{no existe un modelo sin supuestos}. Todo modelo f\'isico hace supuestos. Lo correcto en un proyecto acad\'emico no es decir ``no hago supuestos'', sino:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item hacer el \textbf{menor n\'umero posible} de supuestos;
+\item que esos supuestos sean \textbf{expl\'icitos};
+\item que cada supuesto tenga una \textbf{justificaci\'on f\'isica}.
+\end{itemize}
+
+En esta versi\'on voy a formular un modelo m\'as riguroso que el anterior, usando:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item segunda ley de Newton para la parte mec\'anica;
+\item ley de Hooke para el resorte;
+\item ley del amortiguador viscoso;
+\item ley de voltajes de Kirchhoff para un actuador electromec\'anico sencillo;
+\item relaci\'on fuerza-corriente del actuador;
+\item linealizaci\'on por Jacobianos alrededor del equilibrio.
+\end{itemize}
+
+Esta formulaci\'on tiene una ventaja grande: el sistema queda de tercer orden \textbf{sin inventar un estado de fuerza}, sino de manera directa a partir de una variable el\'ectrica interna del actuador.
+
+\section{Qu\'e sistema f\'isico estamos modelando}
+
+Se modela una \textbf{plataforma antivibratoria activa}. El sistema tiene:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item una base inferior que se mueve seg\'un una perturbaci\'on externa;
+\item una plataforma superior con masa concentrada;
+\item un resorte entre base y plataforma;
+\item un amortiguador entre base y plataforma;
+\item un actuador lineal electromec\'anico que aplica fuerza entre base y plataforma.
+\end{itemize}
+
+Si quisi\'eramos una interpretaci\'on concreta, el actuador puede verse como un \textbf{voice coil}, un actuador lineal magn\'etico o un actuador equivalente cuyo esfuerzo es proporcional a la corriente.
+
+\section{Variables y coordenadas}
+
+\subsection{Coordenadas absolutas}
+
+Primero definimos:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item $x(t)$: posici\'on absoluta de la plataforma.
+\item $z(t)$: posici\'on absoluta de la base.
+\end{itemize}
+
+\subsection{Coordenada relativa}
+
+Para este tipo de sistema es muy conveniente definir la coordenada relativa:
+\begin{equation}
+q(t) = x(t) - z(t).
+\label{eq:qdef}
+\end{equation}
+
+Esta coordenada tiene una interpretaci\'on f\'isica inmediata: es la deformaci\'on total de la suspensi\'on. De hecho:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item si $q=0$, la plataforma y la base tienen la misma posici\'on;
+\item si $q>0$, la plataforma est\'a desplazada por encima de la base;
+\item si $q<0$, la plataforma est\'a desplazada por debajo de la base.
+\end{itemize}
+
+Derivando \eqref{eq:qdef}:
+\begin{equation}
+\dot{q}(t)=\dot{x}(t)-\dot{z}(t),
+\label{eq:qdot}
+\end{equation}
+\begin{equation}
+\ddot{q}(t)=\ddot{x}(t)-\ddot{z}(t).
+\label{eq:qddot}
+\end{equation}
+
+\subsection{Por qu\'e conviene usar $q$}
+
+Porque:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el resorte y el amortiguador dependen naturalmente de la deformaci\'on y velocidad relativas;
+\item la ecuaci\'on mec\'anica queda m\'as limpia;
+\item la perturbaci\'on de base entra de forma f\'isicamente clara.
+\end{itemize}
+
+\section{Derivaci\'on mec\'anica exacta del subsistema masa-resorte-amortiguador}
+
+\subsection{Segunda ley de Newton}
+
+Sobre la masa de la plataforma se aplica:
+\begin{equation}
+\sum F = m\ddot{x}.
+\label{eq:newton}
+\end{equation}
+
+Las fuerzas que act\'uan sobre la plataforma son:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item fuerza del resorte;
+\item fuerza del amortiguador;
+\item fuerza del actuador.
+\end{itemize}
+
+Por ahora voy a derivar la parte lineal m\'inima rigurosa. Despu\'es mostrar\'e c\'omo se agregan no linealidades realistas.
+
+\subsection{Fuerza del resorte}
+
+La ley de Hooke dice:
+\begin{equation}
+F_s = k\,\Delta \ell,
+\end{equation}
+donde $\Delta \ell$ es la deformaci\'on del resorte respecto a su longitud de equilibrio.
+
+En nuestro sistema, la deformaci\'on del resorte es exactamente la diferencia de posiciones entre la plataforma y la base:
+\[
+\Delta \ell = x-z = q.
+\]
+
+Por tanto, la fuerza del resorte sobre la masa es restauradora:
+\begin{equation}
+F_s = -k(x-z) = -kq.
+\label{eq:Fs}
+\end{equation}
+
+\subsection{Fuerza del amortiguador}
+
+Para un amortiguador viscoso ideal:
+\begin{equation}
+F_d = c\,\Delta \dot{\ell},
+\end{equation}
+donde $\Delta \dot{\ell}$ es la velocidad relativa entre sus extremos.
+
+Aqu\'i:
+\[
+\Delta \dot{\ell} = \dot{x}-\dot{z} = \dot{q}.
+\]
+
+La fuerza que se opone al movimiento relativo queda:
+\begin{equation}
+F_d = -c(\dot{x}-\dot{z}) = -c\dot{q}.
+\label{eq:Fd}
+\end{equation}
+
+\subsection{Fuerza del actuador}
+
+La fuerza del actuador se denota por:
+\begin{equation}
+F_a(t).
+\end{equation}
+
+La convenci\'on de signos que usaremos es: $F_a>0$ si el actuador empuja la plataforma en la direcci\'on positiva de $x$.
+
+\subsection{Ecuaci\'on mec\'anica en coordenada absoluta}
+
+Sustituyendo \eqref{eq:Fs} y \eqref{eq:Fd} en \eqref{eq:newton}:
+\begin{equation}
+m\ddot{x} = -k(x-z)-c(\dot{x}-\dot{z}) + F_a.
+\label{eq:absolute_mech}
+\end{equation}
+
+\subsection{Pasar a coordenada relativa}
+
+Usando \eqref{eq:qdef}--\eqref{eq:qddot}:
+
+\[
+x = q+z,\qquad
+\dot{x}=\dot{q}+\dot{z},\qquad
+\ddot{x}=\ddot{q}+\ddot{z}.
+\]
+
+Sustituyendo en \eqref{eq:absolute_mech}:
+\begin{equation}
+m(\ddot{q}+\ddot{z}) = -kq - c\dot{q} + F_a.
+\end{equation}
+
+Reordenando:
+\begin{equation}
+m\ddot{q} + c\dot{q} + kq = F_a - m\ddot{z}.
+\label{eq:relative_mech}
+\end{equation}
+
+\subsection{Interpretaci\'on de \eqref{eq:relative_mech}}
+
+Esta ecuaci\'on es muy importante porque muestra algo f\'isicamente elegante:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la variable interna del sistema es la deformaci\'on relativa $q$;
+\item el resorte y el amortiguador aparecen de forma natural en $q$ y $\dot q$;
+\item la perturbaci\'on de base entra como una \textbf{aceleraci\'on de base} $-\!m\ddot z$.
+\end{itemize}
+
+Es decir, desde la perspectiva relativa, la base excitada act\'ua como una fuerza inercial equivalente.
+
+\section{Derivaci\'on del actuador desde leyes electromagn\'eticas sencillas}
+
+Aqu\'i est\'a una de las partes que quer\'ias con m\'as rigor: \textbf{de d\'onde sale la ecuaci\'on del actuador}.
+
+\subsection{Modelo m\'inimo de un actuador lineal electromec\'anico}
+
+Para un actuador lineal de tipo electromagn\'etico, una ley bastante est\'andar es:
+\begin{equation}
+F_a = K_t i,
+\label{eq:force_current}
+\end{equation}
+donde:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item $i(t)$ es la corriente del actuador;
+\item $K_t$ es la constante de fuerza del actuador.
+\end{itemize}
+
+Esto significa que la fuerza es proporcional a la corriente.
+
+\subsection{Ley de voltajes de Kirchhoff}
+
+En el circuito el\'ectrico del actuador se aplica KVL:
+\begin{equation}
+u = L\dot{i} + Ri + e_b,
+\label{eq:kvl}
+\end{equation}
+donde:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item $u(t)$ es el voltaje aplicado;
+\item $L$ es la inductancia;
+\item $R$ es la resistencia;
+\item $e_b$ es la fuerza contraelectromotriz (back-EMF).
+\end{itemize}
+
+\subsection{Back-EMF}
+
+Cuando el actuador se mueve, genera una fuerza contraelectromotriz proporcional a la velocidad relativa. Como el actuador trabaja entre la plataforma y la base, la velocidad relevante es la relativa:
+\begin{equation}
+e_b = K_e \dot{q},
+\label{eq:bemf}
+\end{equation}
+donde $K_e$ es la constante de back-EMF.
+
+\subsection{Ecuaci\'on el\'ectrica completa}
+
+Sustituyendo \eqref{eq:bemf} en \eqref{eq:kvl}:
+\begin{equation}
+u = L\dot{i} + Ri + K_e\dot{q}.
+\label{eq:electric}
+\end{equation}
+
+Reordenando:
+\begin{equation}
+L\dot{i} + Ri + K_e\dot{q} = u.
+\label{eq:electric_reordered}
+\end{equation}
+
+\subsection{Interpretaci\'on f\'isica}
+
+Esta ecuaci\'on dice:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item parte del voltaje se usa en cambiar la corriente ($L\dot{i}$);
+\item parte del voltaje cae en la resistencia ($Ri$);
+\item parte del voltaje se ``pierde'' por el movimiento del actuador ($K_e\dot{q}$).
+\end{itemize}
+
+Eso es mucho m\'as riguroso que simplemente asumir un primer orden sin explicar de d\'onde sale.
+
+\section{Modelo electrome\'canico acoplado}
+
+Ahora unimos la parte mec\'anica \eqref{eq:relative_mech} con la parte el\'ectrica \eqref{eq:electric_reordered}.
+
+\subsection{Sistema completo}
+
+Usando \eqref{eq:force_current}, la ecuaci\'on mec\'anica queda:
+\begin{equation}
+m\ddot{q} + c\dot{q} + kq = K_t i - m\ddot{z}.
+\label{eq:full_mech}
+\end{equation}
+
+Y la ecuaci\'on el\'ectrica es:
+\begin{equation}
+L\dot{i} + Ri + K_e\dot{q} = u.
+\label{eq:full_elec}
+\end{equation}
+
+Este ya es un modelo \textbf{f\'isicamente riguroso, lineal y de tercer orden}.
+
+\section{Estados del sistema}
+
+Escogemos como estados:
+\begin{equation}
+x_1 = q,\qquad x_2 = \dot{q},\qquad x_3 = i.
+\end{equation}
+
+Entonces:
+\begin{equation}
+\dot{x}_1 = x_2,
+\label{eq:ss1}
+\end{equation}
+\begin{equation}
+\dot{x}_2 = -\frac{k}{m}x_1 - \frac{c}{m}x_2 + \frac{K_t}{m}x_3 - \ddot{z},
+\label{eq:ss2}
+\end{equation}
+\begin{equation}
+\dot{x}_3 = -\frac{K_e}{L}x_2 - \frac{R}{L}x_3 + \frac{1}{L}u.
+\label{eq:ss3}
+\end{equation}
+
+En forma matricial:
+\begin{equation}
+\dot{x} =
+\underbrace{
+\begin{bmatrix}
+0 & 1 & 0\\
+-\dfrac{k}{m} & -\dfrac{c}{m} & \dfrac{K_t}{m}\\
+0 & -\dfrac{K_e}{L} & -\dfrac{R}{L}
+\end{bmatrix}}_{A}
+x
++
+\underbrace{
+\begin{bmatrix}
+0\\
+0\\
+\dfrac{1}{L}
+\end{bmatrix}}_{B}
+u
++
+\underbrace{
+\begin{bmatrix}
+0\\
+-1\\
+0
+\end{bmatrix}}_{E}
+\ddot{z}.
+\label{eq:ss_matrix}
+\end{equation}
+
+Si escogemos como salida la posici\'on relativa:
+\[
+y=q=x_1,
+\]
+entonces:
+\begin{equation}
+y=
+\underbrace{
+\begin{bmatrix}
+1 & 0 & 0
+\end{bmatrix}}_{C}
+x.
+\end{equation}
+
+Si quieres la posici\'on absoluta de la plataforma, entonces:
+\[
+y=x=q+z.
+\]
+
+\section{Funci\'on de transferencia del modelo riguroso}
+
+Para dise\~nar el controlador se toma primero la perturbaci\'on de base nula:
+\[
+z(t)=0.
+\]
+
+Entonces \eqref{eq:full_mech} y \eqref{eq:full_elec} quedan:
+\begin{equation}
+m\ddot{q} + c\dot{q} + kq = K_t i,
+\label{eq:no_dist_mech}
+\end{equation}
+\begin{equation}
+L\dot{i} + Ri + K_e\dot{q} = u.
+\label{eq:no_dist_elec}
+\end{equation}
+
+Aplicando Laplace con condiciones iniciales nulas:
+\[
+(ms^2+cs+k)Q(s)=K_t I(s),
+\]
+\[
+(Ls+R)I(s)+K_e s Q(s)=U(s).
+\]
+
+Despejando $I(s)$ de la primera:
+\[
+I(s)=\frac{ms^2+cs+k}{K_t}Q(s).
+\]
+
+Sustituyendo en la segunda:
+\[
+(Ls+R)\frac{ms^2+cs+k}{K_t}Q(s) + K_e s Q(s) = U(s).
+\]
+
+Multiplicando por $K_t$:
+\[
+\left[(Ls+R)(ms^2+cs+k)+K_tK_e s\right]Q(s)=K_tU(s).
+\]
+
+Por tanto:
+\begin{equation}
+G(s)=\frac{Q(s)}{U(s)}
+=
+\frac{K_t}
+(Ls+R)(ms^2+cs+k)+K_tK_e s.
+\label{eq:tf_exact}
+\end{equation}
+
+Expandiendo:
+\begin{equation}
+G(s)=\frac{K_t}
+{Lm\,s^3 + (Lc+Rm)s^2 + (Lk+Rc+K_tK_e)s + Rk}.
+\label{eq:tf_expanded}
+\end{equation}
+
+\subsection{Conclusi\'on}
+
+La planta ya es \textbf{de tercer orden} y eso sale directamente de:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item dos estados mec\'anicos ($q$ y $\dot q$);
+\item un estado el\'ectrico ($i$).
+\end{itemize}
+
+\section{An\'alisis de estabilidad del modelo lineal riguroso}
+
+La ecuaci\'on caracter\'istica es:
+\[
+Lm\,s^3 + (Lc+Rm)s^2 + (Lk+Rc+K_tK_e)s + Rk = 0.
+\]
+
+Para un c\'ubico
+\[
+a_3s^3+a_2s^2+a_1s+a_0,
+\]
+Routh-Hurwitz exige:
+
+\begin{equation}
+a_3>0,\quad a_2>0,\quad a_1>0,\quad a_0>0,\quad a_2a_1>a_3a_0.
+\label{eq:rh}
+\end{equation}
+
+Aqu\'i:
+\[
+a_3=Lm,\qquad
+a_2=Lc+Rm,\qquad
+a_1=Lk+Rc+K_tK_e,\qquad
+a_0=Rk.
+\]
+
+Si $L,m,c,R,k,K_t,K_e$ son positivos, entonces los cuatro coeficientes son positivos. La condici\'on no trivial es:
+\begin{equation}
+(Lc+Rm)(Lk+Rc+K_tK_e) > LmRk.
+\label{eq:rh_condition}
+\end{equation}
+
+Esa es la condici\'on general de estabilidad del modelo lineal exacto.
+
+\section{C\'omo agregar realismo sin perder rigor}
+
+Hasta aqu\'i el modelo es ya muy riguroso y de tercer orden. Ahora bien, la actividad pide que el modelo realista incluya efectos adicionales que no est\'en en el modelo aproximado. Para eso se pueden a\~nadir:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item rigidez c\'ubica;
+\item fricci\'on seca regularizada;
+\item saturaci\'on del actuador;
+\item topes mec\'anicos.
+\end{itemize}
+
+Entonces el modelo realista puede escribirse como:
+\begin{equation}
+m\ddot{q} + c\dot{q} + kq + k_3q^3
++ F_c\tanh\left(\frac{\dot q}{v_\varepsilon}\right)
++ F_{\text{stop}}(q,\dot q)
+= K_t i - m\ddot z,
+\label{eq:nonlinear_mech}
+\end{equation}
+\begin{equation}
+L\dot i + Ri + K_e\dot q = \mathrm{sat}(u).
+\label{eq:nonlinear_elec}
+\end{equation}
+
+\subsection{Qu\'e parte es realmente ``mucho m\'as real''}
+
+El modelo en Simscape deber\'ia representar precisamente \eqref{eq:nonlinear_mech}--\eqref{eq:nonlinear_elec} o una versi\'on equivalente de ellas usando bloques f\'isicos.
+
+Es decir:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item el \textbf{modelo realista} es el que simulas en Simscape;
+\item el \textbf{modelo nominal} es el lineal, obtenido por linealizaci\'on y usado para dise\~no.
+\end{itemize}
+
+\section{Linealizaci\'on del modelo no lineal}
+
+Ahora hacemos la parte que pediste con m\'as detalle: \textbf{c\'omo se linealiza exactamente}.
+
+\subsection{Definir el vector de estados}
+
+Tomamos:
+\[
+x=
+\begin{bmatrix}
+q\\
+v\\
+i
+\end{bmatrix},
+\qquad v=\dot q.
+\]
+
+Entonces el sistema no lineal queda:
+\begin{equation}
+\dot x_1 = x_2,
+\end{equation}
+\begin{equation}
+\dot x_2 = \frac{1}{m}\left(
+-kx_1 - cx_2 - k_3x_1^3 - F_c\tanh\left(\frac{x_2}{v_\varepsilon}\right)
+-F_{\text{stop}}(x_1,x_2) + K_t x_3 - m\ddot z
+\right),
+\end{equation}
+\begin{equation}
+\dot x_3 = \frac{1}{L}\left(
+-K_e x_2 - R x_3 + \mathrm{sat}(u)
+\right).
+\end{equation}
+
+\subsection{Punto de equilibrio}
+
+Tomamos el equilibrio:
+\[
+x^\star=
+\begin{bmatrix}
+0\\
+0\\
+0
+\end{bmatrix},
+\qquad
+u^\star=0,
+\qquad
+\ddot z^\star=0.
+\]
+
+\subsection{Jacobiano}
+
+La linealizaci\'on se obtiene con:
+\[
+A = \left.\frac{\partial f}{\partial x}\right|_{x^\star,u^\star},
+\qquad
+B = \left.\frac{\partial f}{\partial u}\right|_{x^\star,u^\star}.
+\]
+
+\subsection{Primera ecuaci\'on}
+
+Como
+\[
+f_1(x,u)=x_2,
+\]
+sus derivadas son:
+\[
+\frac{\partial f_1}{\partial x_1}=0,\qquad
+\frac{\partial f_1}{\partial x_2}=1,\qquad
+\frac{\partial f_1}{\partial x_3}=0,\qquad
+\frac{\partial f_1}{\partial u}=0.
+\]
+
+\subsection{Segunda ecuaci\'on}
+
+Sea
+\[
+f_2(x,u)=
+\frac{1}{m}\left(
+-kx_1 - cx_2 - k_3x_1^3 - F_c\tanh\left(\frac{x_2}{v_\varepsilon}\right)
+-F_{\text{stop}}(x_1,x_2) + K_t x_3 - m\ddot z
+\right).
+\]
+
+Derivamos t\'ermino a t\'ermino.
+
+\subsubsection{Derivada respecto a $x_1$}
+
+\[
+\frac{\partial}{\partial x_1}(-kx_1)=-k,
+\qquad
+\frac{\partial}{\partial x_1}(-k_3x_1^3)=-3k_3x_1^2.
+\]
+
+Evaluado en $x_1^\star=0$:
+\[
+-3k_3(x_1^\star)^2 = 0.
+\]
+
+Si el tope no est\'a activo en el equilibrio, entonces:
+\[
+\left.\frac{\partial F_{\text{stop}}}{\partial x_1}\right|_\star = 0.
+\]
+
+Por tanto:
+\begin{equation}
+\left.\frac{\partial f_2}{\partial x_1}\right|_\star = -\frac{k}{m}.
+\end{equation}
+
+\subsubsection{Derivada respecto a $x_2$}
+
+\[
+\frac{\partial}{\partial x_2}(-cx_2)=-c.
+\]
+
+Para el t\'ermino de fricci\'on regularizada:
+\[
+\frac{\partial}{\partial x_2}
+\left[-F_c\tanh\left(\frac{x_2}{v_\varepsilon}\right)\right]
+=
+-F_c\frac{1}{v_\varepsilon}\operatorname{sech}^2\left(\frac{x_2}{v_\varepsilon}\right).
+\]
+
+Evaluado en $x_2^\star=0$:
+\[
+\operatorname{sech}^2(0)=1,
+\]
+entonces:
+\[
+\left.\frac{\partial}{\partial x_2}
+\left[-F_c\tanh\left(\frac{x_2}{v_\varepsilon}\right)\right]\right|_\star
+=
+-\frac{F_c}{v_\varepsilon}.
+\]
+
+Si el tope no est\'a activo:
+\[
+\left.\frac{\partial F_{\text{stop}}}{\partial x_2}\right|_\star=0.
+\]
+
+Por tanto:
+\begin{equation}
+\left.\frac{\partial f_2}{\partial x_2}\right|_\star
+=
+-\frac{1}{m}\left(c+\frac{F_c}{v_\varepsilon}\right).
+\end{equation}
+
+\subsubsection{Derivada respecto a $x_3$}
+
+\[
+\left.\frac{\partial f_2}{\partial x_3}\right|_\star = \frac{K_t}{m}.
+\]
+
+\subsection{Tercera ecuaci\'on}
+
+Sea
+\[
+f_3(x,u)=\frac{1}{L}\left(-K_e x_2 - Rx_3 + \mathrm{sat}(u)\right).
+\]
+
+Si linealizamos en una zona donde la saturaci\'on no est\'a activa, entonces localmente:
+\[
+\mathrm{sat}(u)\approx u.
+\]
+
+Por tanto:
+\[
+\left.\frac{\partial f_3}{\partial x_1}\right|_\star = 0,
+\qquad
+\left.\frac{\partial f_3}{\partial x_2}\right|_\star = -\frac{K_e}{L},
+\qquad
+\left.\frac{\partial f_3}{\partial x_3}\right|_\star = -\frac{R}{L},
+\qquad
+\left.\frac{\partial f_3}{\partial u}\right|_\star = \frac{1}{L}.
+\]
+
+\subsection{Matrices linealizadas}
+
+Entonces:
+\begin{equation}
+A=
+\begin{bmatrix}
+0 & 1 & 0\\[4pt]
+-\dfrac{k}{m} & -\dfrac{1}{m}\left(c+\dfrac{F_c}{v_\varepsilon}\right) & \dfrac{K_t}{m}\\[8pt]
+0 & -\dfrac{K_e}{L} & -\dfrac{R}{L}
+\end{bmatrix},
+\qquad
+B=
+\begin{bmatrix}
+0\\
+0\\
+\dfrac{1}{L}
+\end{bmatrix}.
+\label{eq:AB_lin}
+\end{equation}
+
+\subsection{Observaci\'on importante sobre la fricci\'on}
+
+Si no quieres que el modelo nominal herede un t\'ermino extra de amortiguamiento por la regularizaci\'on $\tanh$, entonces puedes tomar la decisi\'on metodol\'ogica de:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item incluir la fricci\'on solo en el modelo realista;
+\item y omitirla del modelo nominal lineal.
+\end{itemize}
+
+Eso tambi\'en es v\'alido y, de hecho, puede ser m\'as limpio para dise\~no.
+
+\section{C\'omo se obtiene el modelo simplificado que usamos antes}
+
+Ahora conectamos este modelo riguroso con el modelo simplificado anterior.
+
+\subsection{Hip\'otesis de simplificaci\'on}
+
+Si en el rango de operaci\'on del dise\~no:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item la velocidad relativa es peque\~na;
+\item el back-EMF $K_e\dot q$ es mucho menor que $u$ y $Ri$;
+\item y queremos trabajar con una variable interna fuerza en lugar de corriente,
+\end{itemize}
+entonces de \eqref{eq:electric_reordered} aproximamos:
+\[
+L\dot i + Ri \approx u.
+\]
+
+Como $F_a=K_t i$, entonces:
+\[
+\dot F_a = K_t \dot i.
+\]
+
+Multiplicando la ecuaci\'on aproximada por $K_t/R$:
+\[
+\frac{L}{R}\dot F_a + F_a = \frac{K_t}{R}u.
+\]
+
+Definiendo:
+\[
+\tau_a = \frac{L}{R},
+\qquad
+K_a = \frac{K_t}{R},
+\]
+obtenemos:
+\begin{equation}
+\tau_a\dot F_a + F_a = K_a u.
+\label{eq:simplified_force_model}
+\end{equation}
+
+Esa es exactamente la forma simplificada que hab\'iamos usado antes.
+
+\subsection{Interpretaci\'on}
+
+Entonces el modelo anterior no estaba ``inventado'', sino que puede verse como una \textbf{aproximaci\'on de primer orden del subsistema el\'ectrico del actuador} cuando se desprecia el back-EMF.
+
+\section{Respuesta directa a tu duda principal}
+
+La secuencia correcta del proyecto es:
+
+\begin{enumerate}[leftmargin=1.2cm]
+\item plantear un modelo f\'isico del sistema;
+\item derivar sus ecuaciones usando leyes f\'isicas;
+\item construir un modelo realista de simulaci\'on;
+\item linealizar alrededor del equilibrio para obtener el modelo nominal;
+\item dise\~nar el controlador con ese modelo nominal;
+\item comparar el modelo nominal y el modelo realista en simulaci\'on.
+\end{enumerate}
+
+O, dicho de forma muy clara:
+
+\begin{quote}
+\textbf{S\'i: primero planteamos el sistema realista, luego lo linealizamos para obtener el modelo nominal, y despu\'es lo comparamos con la versi\'on m\'as realista que simulamos en Simulink/Simscape.}
+\end{quote}
+
+La correcci\'on importante es que \textbf{Simscape no te ``entrega'' la ecuaci\'on de tercer orden}. Esa ecuaci\'on sale de tu derivaci\'on matem\'atica.
+
+\section{Conclusi\'on}
+
+La formulaci\'on m\'as rigurosa del proyecto, usando solo herramientas razonables del curso, es:
+
+\begin{itemize}[leftmargin=1.2cm]
+\item parte mec\'anica obtenida con Newton;
+\item resorte obtenido con Hooke;
+\item amortiguador con ley viscosa;
+\item actuador obtenido con fuerza proporcional a corriente y KVL;
+\item planta lineal exacta de tercer orden;
+\item versi\'on realista obtenida agregando saturaci\'on, fricci\'on y topes;
+\item linealizaci\'on por Jacobianos alrededor del equilibrio.
+\end{itemize}
+
+Si quieres m\'aximo rigor en el informe, esta es la versi\'on que yo usar\'ia como base te\'orica.
+
+\end{document}
