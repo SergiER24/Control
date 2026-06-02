@@ -9,14 +9,16 @@
 
 const fs = await import("node:fs/promises");
 const path = await import("node:path");
+const { fileURLToPath } = await import("node:url");
 const { Presentation, PresentationFile } = await import("@oai/artifact-tool");
 
 const W = 1280;
 const H = 720;
 
 const DECK_ID = "plataforma-antivibratoria-control";
-const OUT_DIR = "/Users/sergioe.ropero/Documents/2026/Control/presentacion_control/outputs";
-const REF_DIR = "/Users/sergioe.ropero/Documents/2026/Control/presentacion_control/reference";
+const PROJECT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const OUT_DIR = path.join(PROJECT_DIR, "outputs");
+const REF_DIR = path.join(PROJECT_DIR, "reference");
 const SCRATCH_DIR = path.resolve(process.env.PPTX_SCRATCH_DIR || path.join("tmp", "slides", DECK_ID));
 const PREVIEW_DIR = path.join(SCRATCH_DIR, "preview");
 const VERIFICATION_DIR = path.join(SCRATCH_DIR, "verification");

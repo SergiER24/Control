@@ -1,31 +1,27 @@
 # Control
 
-Repositorio curado del trabajo realizado durante el semestre para la materia de
-Control.
+Selected materials from the Control course at Universidad de los Andes. This
+repository is organized as a university course archive, not as a semester
+portfolio.
 
-## Estructura
+## Structure
 
-- `code/`: modelos, scripts y proyectos reproducibles.
-- `docs/`: entregables, informes y material de presentacion propio.
-- `archive/`: modelos originales de laboratorio conservados como referencia.
+- `code/`: reproducible models, scripts, and projects.
+- `docs/`: selected submissions, reports, and presentation materials.
+- `archive/`: original laboratory models preserved for reference.
 
-## Contenido principal
+## Highlights
 
-- `code/plataforma_antivibratoria/`
-  Modelado, linealizacion, scripts de simulacion e informe IEEE de la actividad
-  de plataforma antivibratoria.
-- `code/esclusa_nivel_agua/`
-  Proyecto de modelado de nivel de agua con scripts para generar los modelos de
-  Simulink.
-- `code/ejercicios_y_laboratorios/`
-  Ejercicios, prelaboratorios y modelos complementarios.
-- `code/presentacion_control/`
-  Fuente de la presentacion de la materia.
-- `docs/actividad_2_equipo/`
-  Entrega grupal de la Actividad 2.
+- `code/anti_vibration_platform/`: modeling, linearization, simulation scripts,
+  and an IEEE-format report for the anti-vibration platform activity.
+- `code/water_level_lock/`: water-level modeling project with scripts for
+  generating Simulink models.
+- `code/exercises_and_labs/`: exercises, pre-lab work, and complementary models.
+- `code/control_presentation/`: source files for the course presentation.
+- `docs/team_activity_2/`: selected team submission for Activity 2.
 
-## Exclusiones
+## Notes
 
-No se versionan caches, carpetas temporales, videos pesados, dependencias,
-resultados regenerables de MATLAB o Simulink, ni material base externo usado
-como referencia.
+Original course artifacts may retain their submitted filenames and language.
+Caches, temporary folders, heavy videos, dependencies, regenerated MATLAB or
+Simulink outputs, and external reference material are intentionally excluded.
