@@ -1,5 +1,0 @@
-Integrante 1: [Nombre del estudiante 1]
-Integrante 2: [Nombre del estudiante 2]
-
-Descripcion breve del proyecto:
-Se desarrollara una plataforma antivibratoria activa para un sensor de ultrasonido usado en pruebas de laboratorio para inspeccion de papas. La base del montaje esta sometida a vibraciones que alteran la posicion del sensor y degradan la medicion. El objetivo del proyecto es modelar la plataforma como un sistema de tercer orden y disenar una estrategia de control IMC-PID orientada al rechazo de perturbaciones de base, de modo que el sensor permanezca lo mas inmovil posible durante la toma de datos.

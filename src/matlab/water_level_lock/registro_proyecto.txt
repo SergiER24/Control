@@ -1,2 +1,0 @@
-Proyecto 2:
-Modelado y control del nivel de agua en una camara de esclusa utilizada en canales de navegacion. La variable de entrada es la apertura de una valvula de llenado/vaciado y la salida es el nivel de agua en la camara. Se propone un modelo lineal aproximado de tercer orden para el diseno del controlador y un modelo no lineal realista que incluye perdidas turbulentas, dependencia del flujo con la altura y saturacion del actuador.

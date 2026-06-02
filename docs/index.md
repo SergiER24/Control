@@ -1,30 +1,31 @@
-# Active Anti-Vibration Platform
+# Active Anti-Vibration Platform for an Ultrasonic Sensor
 
-This GitHub Pages-ready site documents the featured project from the Control
-course at Universidad de los Andes.
+This page documents the selected Activity 2 project from the Universidad de los
+Andes Control course. The public repository intentionally preserves only the
+final report and the editable Simulink model supplied for this activity.
 
-## Engineering Workflow
+## Application
 
-```mermaid
-flowchart LR
-    A[Physical platform] --> B[Lumped-parameter model]
-    B --> C[Transfer function]
-    C --> D[State-space realization]
-    C --> E[IMC controller design]
-    D --> F[Stability and frequency analysis]
-    E --> G[Closed-loop simulation]
-    H[Nonlinear effects] --> G
-    G --> I[Performance metrics]
-```
+The platform is intended to reduce ultrasonic-sensor motion caused by table or
+base vibrations during laboratory tests related to potato pest detection. The
+primary control objective is disturbance rejection around a fixed equilibrium,
+not trajectory tracking.
 
-## Documentation Map
+## Canonical Artifacts
 
-- [Mathematical formulation](mathematical-formulation.md)
-- [Reproducibility guide](reproducibility.md)
-- [Portfolio evaluation](portfolio-evaluation.md)
+- [Final Activity 2 report](https://github.com/SergiER24/Control/blob/main/reports/activity_2_active_anti_vibration_platform.pdf)
+- [Editable Simulink and Simscape model](https://github.com/SergiER24/Control/blob/main/src/simulink/ModeloSistema.slx)
 
-## Generated Evidence
+## Technical Summary
 
-![Closed-loop tracking](assets/closed_loop_tracking.png)
+- Third-order electromechanical nominal model
+- State-space formulation
+- Routh-Hurwitz stability condition
+- Reduced second-order model for IMC-based PID tuning
+- Filtered PID implementation in Simulink
+- Regulation and step-reference evaluation scenarios
 
-![Bode response](assets/bode_response.png)
+## Documentation
+
+- [Mathematical formulation](model-formulation.md)
+- [Artifact scope](artifact-scope.md)

@@ -1,146 +1,138 @@
-# Active Anti-Vibration Platform: Modeling and IMC Control
+# Active Anti-Vibration Platform for an Ultrasonic Sensor
 
-Computational control-systems portfolio from the Control course at Universidad
-de los Andes. The featured project is an active anti-vibration platform for
-isolating sensitive equipment from base disturbances.
+Selected Activity 2 project from the Control course at Universidad de los
+Andes. The repository intentionally contains only the final report and the
+Simulink model provided for this activity.
 
-The repository combines a MATLAB/Simulink implementation with a portable Python
-analysis that regenerates stability plots, frequency-response figures,
-root-locus diagrams, time-domain simulations, and numerical summaries.
+The report was prepared by Sergio Emmanuel Ropero and Juan Felipe Ortiz.
 
-![Closed-loop tracking and disturbance rejection](figures/closed_loop_tracking.png)
+## Canonical Artifacts
+
+| Artifact | Purpose |
+| --- | --- |
+| [`reports/activity_2_active_anti_vibration_platform.pdf`](reports/activity_2_active_anti_vibration_platform.pdf) | Final Activity 2 report |
+| [`src/simulink/ModeloSistema.slx`](src/simulink/ModeloSistema.slx) | Editable Simulink and Simscape model |
 
 ## Project Abstract
 
-The featured system is a single-degree-of-freedom isolation platform with a
-first-order actuator. A nominal linear model supports Internal Model Control
-(IMC) design, while a nonlinear model introduces cubic stiffness, smoothed
-Coulomb friction, actuator saturation, and mechanical stops. The project
-evaluates the difference between nominal and realistic behavior and documents
-the controller rationale using reproducible computational analysis.
+The project studies an active anti-vibration platform for an ultrasonic sensor
+used in laboratory tests related to potato pest detection. Vibrations from the
+table or mounting base can change the sensor position and degrade distance
+measurements. The main control objective is therefore local regulation:
+maintaining the platform position close to its equilibrium while rejecting
+external disturbances.
 
-## Engineering Objectives
+## Physical Model
 
-- Derive a third-order plant model from mechanical and actuator dynamics.
-- Design an IMC-based feedback controller for reference tracking.
-- Evaluate open-loop stability and closed-loop performance.
-- Compare nominal and nonlinear platform behavior.
-- Quantify disturbance rejection and actuator effort.
-- Preserve MATLAB/Simulink artifacts while providing a portable Python workflow.
-
-## Mathematical Formulation
-
-The nominal plant is
+The report defines the relative displacement
 
 ```math
-G(s)=\frac{K_a}{(\tau_a s+1)(m s^2+c s+k)}
+q(t)=x(t)-z(t),
 ```
 
-with `m = 12 kg`, `c = 95 N s/m`, `k = 1800 N/m`,
-`K_a = 220 N/V`, and `\tau_a = 0.04 s`.
-
-The IMC filter and equivalent feedback controller are
+where `x(t)` is the absolute platform position and `z(t)` is the base position.
+The mechanical and electrical equations are
 
 ```math
-F(s)=\frac{1}{(\lambda s+1)^3}, \qquad
-G_c(s)=
-\frac{(\tau_a s+1)(m s^2+c s+k)}
-{K_a \lambda s(\lambda^2s^2+3\lambda s+3)}
+m\ddot{q}+c\dot{q}+kq=K_f i-m\ddot{z},
 ```
 
-where `\lambda = 0.10 s`. See
-[Mathematical Formulation](docs/mathematical-formulation.md) for the state-space
-model, nonlinear forces, stability analysis, and controller rationale.
+```math
+L\dot{i}+Ri+K_e\dot{q}=u.
+```
 
-## Assumptions
+For nominal analysis, the base disturbance is temporarily set to zero. The
+resulting third-order transfer function is
 
-- The nominal suspension is linear and represented by lumped parameters.
-- The actuator is modeled as a first-order force source.
-- The nonlinear comparison includes cubic stiffness, smoothed Coulomb friction,
-  voltage saturation, and hard stops.
-- The Python companion reproduces the engineering analysis without requiring
-  MATLAB; Simulink remains the primary block-diagram implementation.
+```math
+G(s)=\frac{Q(s)}{U(s)}
+=\frac{K_f}
+{Lm s^3+(Lc+Rm)s^2+(Lk+Rc+K_fK_e)s+Rk}.
+```
 
-## Methodology
+The report also derives the corresponding state-space representation and the
+Routh-Hurwitz stability condition:
 
-1. Define physical parameters and derive `G(s)`.
-2. Convert the transfer function to state space and inspect its poles.
-3. Construct the IMC controller and nominal closed-loop response.
-4. Simulate linear and nonlinear open-loop behavior.
-5. Simulate nonlinear feedback tracking under base excitation.
-6. Export figures and machine-readable metrics.
+```math
+(Lc+Rm)(Lk+Rc+K_fK_e)>LmRk.
+```
 
-## Results
+## Controller Design
 
-Generated artifacts are committed under [`figures/`](figures/) and
-[`results/`](results/). The workflow produces:
+For controller tuning, the report introduces the reduced mechanical model
 
-- plant Bode response;
-- root-locus diagram;
-- linear versus nonlinear open-loop comparison;
-- nominal closed-loop step response;
-- nonlinear tracking and disturbance-rejection response;
-- state-space matrices and performance metrics.
+```math
+G_r(s)=\frac{1}{s^2+5s+100}.
+```
 
-![Frequency response](figures/bode_response.png)
-![Root locus](figures/root_locus.png)
+Using the IMC-based derivation documented in the report and preserving
+`P = 50`, the ideal PID controller is
 
-## Discussion
+```math
+C(s)=50\left(1+\frac{1}{0.05s}+0.2s\right).
+```
 
-The project demonstrates the full control-engineering chain: physical
-modeling, linearization, transfer-function analysis, state-space conversion,
-frequency-domain reasoning, controller design, and nonlinear validation. The
-portable Python layer makes the evidence reviewable by admissions committees
-and engineering recruiters without specialized proprietary software.
+The final report recommends the following parameters for the filtered PID
+block:
+
+| Parameter | Value |
+| --- | ---: |
+| `P` | `50` |
+| `I` | `0.05` |
+| `D` | `0.2` |
+| `N` | `10` |
+
+## Report and Model Difference
+
+The supplied `.slx` file preserves a `PID Controller1` block with:
+
+| Parameter | Report value | Supplied `.slx` value |
+| --- | ---: | ---: |
+| `P` | `50` | `50` |
+| `I` | `0.05` | `0.05` |
+| `D` | `0.2` | `0.2` |
+| `N` | `10` | `100` |
+
+The model also contains a block named `Autoting` with a separate stored
+parameter set. This repository preserves the submitted files without modifying
+either implementation choice.
+
+## Evaluation Scope
+
+The report distinguishes two scenarios:
+
+1. **Disturbance rejection:** the primary application, with a fixed setpoint
+   `r(t) = 0`.
+2. **Step-reference tracking:** a complementary test requested for controller
+   evaluation.
+
+The report concludes that the controller is more appropriate for local
+regulation than for reference tracking. The submitted PDF preserves the
+simulation figures, discussion, and reported performance table.
+
+## Simulink Model
+
+The `.slx` file contains the editable implementation, including the mechanical
+platform model, a Simscape Multibody subsystem, open-loop paths, a filtered PID
+controller, setpoint and perturbation blocks, and scopes for response
+inspection.
 
 ## Repository Structure
 
 ```text
-docs/        GitHub Pages-ready technical documentation
-figures/     Generated publication-quality plots
-notebooks/   Preserved computational notebooks
-reports/     Selected course reports and submissions
-results/     Generated numerical summaries and response data
-src/         Python analysis, MATLAB models, and Simulink assets
-tests/       Lightweight regression tests
+docs/           GitHub Pages-ready project summary
+reports/        Final submitted report
+src/simulink/   Editable Simulink and Simscape model
 ```
 
-## Installation
+## How to Review
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-```
+1. Read the [final report](reports/activity_2_active_anti_vibration_platform.pdf).
+2. Open [`ModeloSistema.slx`](src/simulink/ModeloSistema.slx) in MATLAB Simulink
+   with the required Simscape products.
+3. Inspect the regulation and tracking configurations documented in the report.
 
-MATLAB users can also run
-[`src/matlab/anti_vibration_platform/run_all.m`](src/matlab/anti_vibration_platform/run_all.m).
+## Scope Note
 
-## Reproducibility
-
-```bash
-python src/python/control_portfolio.py
-python -m unittest discover -s tests -v
-```
-
-See [Reproducibility Guide](docs/reproducibility.md) for generated files and
-MATLAB/Simulink notes.
-
-## Future Work
-
-- Validate the model using measured platform acceleration and actuator data.
-- Add robust-control comparisons such as loop shaping or `H_\infty` synthesis.
-- Integrate accelerometer feedback and real-time hardware-in-the-loop testing.
-- Compare transmissibility across passive, semi-active, and active isolators.
-
-## References
-
-- K. J. Åström and R. M. Murray, *Feedback Systems*, Princeton University Press.
-- G. F. Franklin, J. D. Powell, and A. Emami-Naeini, *Feedback Control of
-  Dynamic Systems*, Pearson.
-- M. Morari and E. Zafiriou, *Robust Process Control*, Prentice Hall.
-
-## Documentation
-
-Start with the [GitHub Pages-ready documentation](docs/index.md) and the
-[portfolio evaluation](docs/portfolio-evaluation.md).
+This repository does not add generated Python analyses, additional control
+plots, or numerical claims beyond the submitted Activity 2 artifacts.
